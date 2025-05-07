@@ -1,10 +1,12 @@
 package com.example.otriviafan.data
 
+import com.example.otriviafan.data.entities.AnswerEntity
 import com.example.otriviafan.data.entities.StoreItem
 import com.example.otriviafan.data.model.Match
 import com.example.otriviafan.data.model.QuestionWithAnswers
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
 class Repository {
@@ -13,49 +15,179 @@ class Repository {
     private val realtimeDb = FirebaseDatabase.getInstance().reference
 
     // ---------------------------
-    // PREGUNTAS
+    // USUARIO
     // ---------------------------
-    suspend fun getQuestionsFromFirebase(): List<QuestionWithAnswers> {
-        val snapshot = realtimeDb.child("questions").get().await()
-        val list = mutableListOf<QuestionWithAnswers>()
-
-        snapshot.children.forEach { qSnap ->
-            val questionId = qSnap.key?.toIntOrNull() ?: return@forEach
-            val questionText = qSnap.child("questionText").getValue(String::class.java) ?: return@forEach
-            val correctAnswerId = qSnap.child("correctAnswerId").getValue(Int::class.java) ?: return@forEach
-
-            val answers = qSnap.child("answers").children.mapNotNull {
-                val answerId = it.child("id").getValue(Int::class.java)
-                val answerText = it.child("answerText").getValue(String::class.java)
-                if (answerId != null && answerText != null) {
-                    com.example.otriviafan.data.entities.AnswerEntity(id = answerId, questionId = questionId, answerText = answerText)
-                } else null
-            }
-
-            list.add(
-                QuestionWithAnswers(
-                    id = questionId,
-                    questionText = questionText,
-                    correctAnswerId = correctAnswerId,
-                    answers = answers
-                )
+    suspend fun initializeNewUser(userId: String, email: String) {
+        val userRef = realtimeDb.child("users").child(userId)
+        val exists = userRef.get().await().exists()
+        if (!exists) {
+            val initialData = mapOf(
+                "email" to email,
+                "points" to 20, //20 puntos iniciales
+                "highestLevelUnlocked" to 1,
+                "usedRetryPerLevel" to mapOf<String, Boolean>()
             )
+            userRef.setValue(initialData).await()
         }
-
-        return list
     }
 
     // ---------------------------
-    // PROGRESO
+    // PREGUNTAS
     // ---------------------------
-    suspend fun saveProgress(userId: String, questionId: Int, correct: Boolean) {
-        val progressRef = realtimeDb.child("progress").child(userId).push()
-        val progress = mapOf(
-            "questionId" to questionId,
-            "correct" to correct,
-            "timestamp" to System.currentTimeMillis()
-        )
-        progressRef.setValue(progress).await()
+
+    suspend fun getQuestionsByLevelIndex(index: Int): List<QuestionWithAnswers> {
+        val db = FirebaseFirestore.getInstance()
+        val snapshot = db.collection("questions_by_level").get().await()
+
+        val orderedDocs = snapshot.documents
+            .mapNotNull { doc ->
+                val name = doc.id
+                val parts = name.split("_level")
+                if (parts.size == 2) {
+                    val difficulty = parts[0]
+                    val levelNumber = parts[1].toIntOrNull()
+                    if (levelNumber != null) {
+                        Triple(name, difficulty, levelNumber)
+                    } else null
+                } else null
+            }
+            .sortedWith(compareBy<Triple<String, String, Int>>(
+                { when (it.second) {
+                    "easy" -> 0
+                    "medium" -> 1
+                    "difficult" -> 2
+                    else -> 3
+                }},
+                { it.third }
+            ))
+
+        val docName = orderedDocs.getOrNull(index - 1)?.first ?: return emptyList()
+        val doc = db.collection("questions_by_level").document(docName).get().await()
+
+        val questionsList = doc.get("questions") as? List<Map<String, Any>> ?: return emptyList()
+
+        return questionsList.map { questionMap ->
+            val questionText = questionMap["questionText"] as? String ?: ""
+            val correctAnswerId = (questionMap["correctAnswerId"] as? Number)?.toInt() ?: 0
+            val answers = (questionMap["answers"] as? List<Map<String, Any>>)?.map { ans ->
+                AnswerEntity(
+                    id = (ans["id"] as? Number)?.toInt() ?: 0,
+                    questionId = (ans["questionId"] as? Number)?.toInt() ?: 0,
+                    answerText = ans["answerText"] as? String ?: ""
+                )
+            } ?: emptyList()
+
+            QuestionWithAnswers(
+                questionText = questionText,
+                answers = answers,
+                correctAnswerId = correctAnswerId
+            )
+        }
+
+    }
+
+    // ---------------------------
+    // TIENDA
+    // ---------------------------
+    suspend fun assignInitialItemsIfNeeded(userId: String) {
+        val userRef = realtimeDb.child("users").child(userId)
+        val snapshot = userRef.child("purchases").get().await()
+
+        if (snapshot.exists() && snapshot.childrenCount > 0) return
+
+        val storeSnapshot = realtimeDb.child("store_items").get().await()
+        val initialItems = storeSnapshot.children.take(6)
+        val initialPurchases = initialItems.associate { it.key!! to true }
+
+        userRef.child("purchases").updateChildren(initialPurchases).await()
+        userRef.child("points").setValue(0).await()
+    }
+
+    suspend fun loadUserPurchases(userId: String): List<String> {
+        val snapshot = realtimeDb.child("users").child(userId).child("purchases").get().await()
+        return snapshot.children.mapNotNull { it.key }
+    }
+
+    suspend fun loadStoreItems(): List<StoreItem> {
+        val snapshot = realtimeDb.child("store_items").get().await()
+        return snapshot.children.mapNotNull { it.getValue(StoreItem::class.java)?.copy(id = it.key ?: "") }
+    }
+
+    suspend fun buyItem(userId: String, itemId: String, price: Int) {
+        val userRef = realtimeDb.child("users").child(userId)
+        val snapshot = userRef.get().await()
+        val currentPoints = snapshot.child("points").getValue(Int::class.java) ?: 0
+
+        if (currentPoints >= price) {
+            userRef.child("points").setValue(currentPoints - price).await()
+            userRef.child("purchases").child(itemId).setValue(true).await()
+        } else {
+            throw Exception("No tienes suficientes puntos")
+        }
+    }
+
+    // ---------------------------
+    // PUNTOS
+    // ---------------------------
+    suspend fun addPoints(pointsToAdd: Int) {
+        val userId = auth.currentUser?.uid ?: return
+        val userRef = realtimeDb.child("users").child(userId)
+        val snapshot = userRef.get().await()
+        val currentPoints = snapshot.child("points").getValue(Int::class.java) ?: 0
+        userRef.child("points").setValue(currentPoints + pointsToAdd).await()
+    }
+
+    suspend fun spendPoints(pointsToSpend: Int) {
+        val userId = auth.currentUser?.uid ?: return
+        val userRef = realtimeDb.child("users").child(userId)
+        val snapshot = userRef.get().await()
+        val currentPoints = snapshot.child("points").getValue(Int::class.java) ?: 0
+
+        if (currentPoints >= pointsToSpend) {
+            userRef.child("points").setValue(currentPoints - pointsToSpend).await()
+        }
+    }
+
+    suspend fun getUserPoints(userId: String): Int {
+        val snapshot = realtimeDb.child("users").child(userId).child("points").get().await()
+        return snapshot.getValue(Int::class.java) ?: 0
+    }
+
+    // ---------------------------
+    // NIVEL
+    // ---------------------------
+    suspend fun getUserLevel(userId: String): Int {
+        val snapshot = realtimeDb.child("users").child(userId).child("highestLevelUnlocked").get().await()
+        return snapshot.getValue(Int::class.java) ?: 1
+    }
+
+    suspend fun saveUserLevel(userId: String, level: Int) {
+        realtimeDb.child("users").child(userId).child("highestLevelUnlocked").setValue(level).await()
+    }
+
+    suspend fun incrementUserLevel(userId: String) {
+        val current = getUserLevel(userId)
+        saveUserLevel(userId, current + 1)
+    }
+
+    // ---------------------------
+    // REINTENTOS POR NIVEL
+    // ---------------------------
+    suspend fun hasUsedRetryForLevel(userId: String, level: Int): Boolean {
+        val snapshot = realtimeDb.child("users").child(userId).child("usedRetryPerLevel").child(level.toString()).get().await()
+        return snapshot.getValue(Boolean::class.java) ?: false
+    }
+
+    suspend fun markRetryUsed(userId: String, level: Int) {
+        realtimeDb.child("users").child(userId).child("usedRetryPerLevel").child(level.toString()).setValue(true).await()
+    }
+
+    // ---------------------------
+    // RACHA PERFECTA (opcional)
+    // ---------------------------
+    suspend fun getPerfectStreakCount(userId: String): Int {
+        val snapshot = realtimeDb.child("users").child(userId).child("perfectStreakCount").get().await()
+        return snapshot.getValue(Int::class.java) ?: 0
     }
 
     // ---------------------------
@@ -63,19 +195,50 @@ class Repository {
     // ---------------------------
     suspend fun createMatch(playerId: String): String {
         val matchId = realtimeDb.child("matches").push().key ?: return ""
-        val questions = getQuestionsFromFirebase().shuffled().take(10)
+
+        val db = FirebaseFirestore.getInstance()
+        val snapshot = db.collection("questions_by_level").get().await()
+
+        val orderedDocs = snapshot.documents
+            .mapNotNull { doc ->
+                val name = doc.id
+                val parts = name.split("_level")
+                if (parts.size == 2) {
+                    val difficulty = parts[0]
+                    val levelNumber = parts[1].toIntOrNull()
+                    if (levelNumber != null) {
+                        Triple(name, difficulty, levelNumber)
+                    } else null
+                } else null
+            }
+            .sortedWith(compareBy<Triple<String, String, Int>>(
+                { when (it.second) {
+                    "easy" -> 0
+                    "medium" -> 1
+                    "difficult" -> 2
+                    else -> 3
+                }},
+                { it.third }
+            ))
+
+        val randomEntry = orderedDocs.randomOrNull() ?: return ""
+        val docName = randomEntry.first
+        val questions = getQuestionsByLevelIndex(orderedDocs.indexOf(randomEntry) + 1).shuffled().take(15)
 
         val match = Match(
             matchId = matchId,
             player1Id = playerId,
             questions = questions,
             answered = mapOf(playerId to false),
-            status = "waiting"
+            status = "waiting",
+            difficulty = randomEntry.second,
+            level = randomEntry.third
         )
 
         realtimeDb.child("matches").child(matchId).setValue(match).await()
         return matchId
     }
+
 
     suspend fun joinMatch(playerId: String): String? {
         val matchesSnapshot = realtimeDb.child("matches").get().await()
@@ -101,83 +264,13 @@ class Repository {
 
     fun observeMatch(matchId: String, onUpdate: (Match) -> Unit) {
         val matchRef = realtimeDb.child("matches").child(matchId)
-
         matchRef.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
             override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
                 val match = snapshot.getValue(Match::class.java)
                 match?.let { onUpdate(it) }
             }
 
-            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
-                // No hacemos nada en caso de error por ahora
-            }
+            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {}
         })
-    }
-
-    // ---------------------------
-    // TIENDA
-    // ---------------------------
-
-    // 📦 1. Cargar stickers y fondos de pantalla
-    suspend fun loadStoreItems(): List<StoreItem> {
-        val snapshot = realtimeDb.child("store_items").get().await()
-        val list = mutableListOf<StoreItem>()
-
-        snapshot.children.forEach { itemSnap ->
-            val item = itemSnap.getValue(StoreItem::class.java)
-            item?.let { list.add(it.copy(id = itemSnap.key ?: "")) }
-        }
-
-        return list
-    }
-
-    // 🛒 2. Comprar un ítem
-    suspend fun assignInitialItemsIfNeeded(userId: String) {
-        val userRef = realtimeDb.child("users").child(userId)
-
-        // 1. Comprobar si ya tiene compras
-        val snapshot = userRef.child("purchases").get().await()
-
-        if (snapshot.exists() && snapshot.childrenCount > 0) {
-            // Ya tiene compras, no hacemos nada
-            return
-        }
-
-        // 2. Si no tiene compras, asignar los 6 stickers y 6 fondos
-        val storeSnapshot = realtimeDb.child("store_items").get().await()
-
-        val stickers = storeSnapshot.children.filter {
-            it.child("type").getValue(String::class.java) == "sticker"
-        }.take(6)
-
-        val backgrounds = storeSnapshot.children.filter {
-            it.child("type").getValue(String::class.java) == "background"
-        }.take(6)
-
-        val initialPurchases = (stickers + backgrounds).associate { it.key!! to true }
-
-        // 3. Actualizar en el usuario: sus compras + puntos iniciales
-        userRef.child("purchases").updateChildren(initialPurchases).await()
-        userRef.child("points").setValue(500).await()
-    }
-
-    suspend fun buyItem(userId: String, itemId: String, price: Int) {
-        val userRef = realtimeDb.child("users").child(userId)
-
-        val snapshot = userRef.get().await()
-        val currentPoints = snapshot.child("points").getValue(Int::class.java) ?: 0
-
-        if (currentPoints >= price) {
-            userRef.child("points").setValue(currentPoints - price).await()
-            userRef.child("purchases").child(itemId).setValue(true).await()
-        } else {
-            throw Exception("No tienes suficientes puntos para comprar este ítem")
-        }
-    }
-
-    // ✅ 3. Cargar compras del usuario
-    suspend fun loadUserPurchases(userId: String): List<String> {
-        val snapshot = realtimeDb.child("users").child(userId).child("purchases").get().await()
-        return snapshot.children.mapNotNull { it.key }
     }
 }

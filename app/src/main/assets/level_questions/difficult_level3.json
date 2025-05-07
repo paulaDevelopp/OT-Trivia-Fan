@@ -1,0 +1,154 @@
+{
+  "questions": [
+    {
+      "questionText": "¿Qué concursante de OT 2002 fue apodado como 'el crooner español' por su estilo clásico?",
+      "answers": [
+        { "answerText": "Hugo", "id": 900, "questionId": 901 },
+        { "answerText": "Manu Tenorio", "id": 901, "questionId": 901 },
+        { "answerText": "Javián", "id": 902, "questionId": 901 },
+        { "answerText": "Alex Casademunt", "id": 903, "questionId": 901 }
+      ],
+      "correctAnswerId": 901
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2018 compuso una canción sobre salud mental dentro de la academia?",
+      "answers": [
+        { "answerText": "Marta", "id": 904, "questionId": 902 },
+        { "answerText": "Natalia", "id": 905, "questionId": 902 },
+        { "answerText": "Dave", "id": 906, "questionId": 902 },
+        { "answerText": "Julia", "id": 907, "questionId": 902 }
+      ],
+      "correctAnswerId": 905
+    },
+    {
+      "questionText": "¿Qué gala de OT 2020 fue cancelada debido a la pandemia de COVID-19?",
+      "answers": [
+        { "answerText": "Gala 8", "id": 908, "questionId": 903 },
+        { "answerText": "Gala 6", "id": 909, "questionId": 903 },
+        { "answerText": "Gala 9", "id": 910, "questionId": 903 },
+        { "answerText": "Gala 11", "id": 911, "questionId": 903 }
+      ],
+      "correctAnswerId": 908
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2008 interpretó una versión flamenca de 'Nothing Else Matters' en su casting?",
+      "answers": [
+        { "answerText": "Anabel", "id": 912, "questionId": 904 },
+        { "answerText": "Alba", "id": 913, "questionId": 904 },
+        { "answerText": "Noelia", "id": 914, "questionId": 904 },
+        { "answerText": "Patricia", "id": 915, "questionId": 904 }
+      ],
+      "correctAnswerId": 912
+    },
+    {
+      "questionText": "¿Quién fue la directora de la academia de OT durante las ediciones de 2017 a 2023?",
+      "answers": [
+        { "answerText": "Nina", "id": 916, "questionId": 905 },
+        { "answerText": "Edurne", "id": 917, "questionId": 905 },
+        { "answerText": "Noemí Galera", "id": 918, "questionId": 905 },
+        { "answerText": "Mónica Naranjo", "id": 919, "questionId": 905 }
+      ],
+      "correctAnswerId": 918
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2005 fue acusado de plagio por uno de sus sencillos tras el programa?",
+      "answers": [
+        { "answerText": "Fran Dieli", "id": 920, "questionId": 906 },
+        { "answerText": "Sergio Rivero", "id": 921, "questionId": 906 },
+        { "answerText": "Sandra", "id": 922, "questionId": 906 },
+        { "answerText": "Víctor", "id": 923, "questionId": 906 }
+      ],
+      "correctAnswerId": 921
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2017 se convirtió en actriz y participó en 'Élite' de Netflix?",
+      "answers": [
+        { "answerText": "Amaia", "id": 924, "questionId": 907 },
+        { "answerText": "Aitana", "id": 925, "questionId": 907 },
+        { "answerText": "Nerea", "id": 926, "questionId": 907 },
+        { "answerText": "Ana Guerra", "id": 927, "questionId": 907 }
+      ],
+      "correctAnswerId": 926
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2001 fue el primero en cantar un tema propio en una gala?",
+      "answers": [
+        { "answerText": "David Bisbal", "id": 928, "questionId": 908 },
+        { "answerText": "Chenoa", "id": 929, "questionId": 908 },
+        { "answerText": "Álex Casademunt", "id": 930, "questionId": 908 },
+        { "answerText": "Verónica Romero", "id": 931, "questionId": 908 }
+      ],
+      "correctAnswerId": 931
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2023 fue conocido por sus imitaciones dentro de la academia?",
+      "answers": [
+        { "answerText": "Lucas", "id": 932, "questionId": 909 },
+        { "answerText": "Omar", "id": 933, "questionId": 909 },
+        { "answerText": "Álvaro Mayo", "id": 934, "questionId": 909 },
+        { "answerText": "Chiara", "id": 935, "questionId": 909 }
+      ],
+      "correctAnswerId": 934
+    },
+    {
+      "questionText": "¿Qué dúo formado en OT 2017 representó a España en Eurovisión?",
+      "answers": [
+        { "answerText": "Amaia y Alfred", "id": 936, "questionId": 910 },
+        { "answerText": "Miriam y Agoney", "id": 937, "questionId": 910 },
+        { "answerText": "Aitana y Cepeda", "id": 938, "questionId": 910 },
+        { "answerText": "Ana Guerra y Roi", "id": 939, "questionId": 910 }
+      ],
+      "correctAnswerId": 936
+    },
+    {
+      "questionText": "¿Cuál fue el tema original presentado por Maialen (Chica Sobresalto) en OT 2020?",
+      "answers": [
+        { "answerText": "Oxitocina", "id": 940, "questionId": 911 },
+        { "answerText": "Fusión del Núcleo", "id": 941, "questionId": 911 },
+        { "answerText": "Lisergia", "id": 942, "questionId": 911 },
+        { "answerText": "La distancia", "id": 943, "questionId": 911 }
+      ],
+      "correctAnswerId": 941
+    },
+    {
+      "questionText": "¿Qué miembro del jurado debutó en OT 2023 como crítico musical?",
+      "answers": [
+        { "answerText": "Cristina Regatero", "id": 944, "questionId": 912 },
+        { "answerText": "Pilar Rubio", "id": 945, "questionId": 912 },
+        { "answerText": "Rodrigo Cuevas", "id": 946, "questionId": 912 },
+        { "answerText": "Ángel Llàcer", "id": 947, "questionId": 912 }
+      ],
+      "correctAnswerId": 944
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2011 ha desarrollado una carrera como tenor en ópera?",
+      "answers": [
+        { "answerText": "Ramil", "id": 948, "questionId": 913 },
+        { "answerText": "Nahuel", "id": 949, "questionId": 913 },
+        { "answerText": "Alex Forriols", "id": 950, "questionId": 913 },
+        { "answerText": "Juan Delgado", "id": 951, "questionId": 913 }
+      ],
+      "correctAnswerId": 948
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2004 fue conocido por interpretar tango en la gala final?",
+      "answers": [
+        { "answerText": "Sandra", "id": 952, "questionId": 914 },
+        { "answerText": "Ramón", "id": 953, "questionId": 914 },
+        { "answerText": "Sonia", "id": 954, "questionId": 914 },
+        { "answerText": "Miguel Cadenas", "id": 955, "questionId": 914 }
+      ],
+      "correctAnswerId": 955
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2023 grabó un videoclip oficial aún dentro de la academia?",
+      "answers": [
+        { "answerText": "Paul", "id": 956, "questionId": 915 },
+        { "answerText": "Salma", "id": 957, "questionId": 915 },
+        { "answerText": "Naiara", "id": 958, "questionId": 915 },
+        { "answerText": "Omar", "id": 959, "questionId": 915 }
+      ],
+      "correctAnswerId": 958
+    }
+  ]
+}

@@ -45,7 +45,7 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel) {
             .padding(16.dp)
     ) {
         Text(
-            text = "Tienda de Stickers y Fondos",
+            text = "Tienda de fondos de pantalla de OT",
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
@@ -92,11 +92,8 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel) {
                                             imageUrl = item.imageUrl,
                                             filename = item.name.replace(" ", "_")
                                         )
-                                        if (success) {
-                                            Toast.makeText(context, "Guardado en galería 📷", Toast.LENGTH_SHORT).show()
-                                        } else {
-                                            Toast.makeText(context, "Error al guardar", Toast.LENGTH_SHORT).show()
-                                        }
+                                        val message = if (success) "Guardado en galería 📷" else "Error al guardar"
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
@@ -122,7 +119,6 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Mostrar errores o éxito
         errorMessage?.let { error ->
             Snackbar(
                 action = {

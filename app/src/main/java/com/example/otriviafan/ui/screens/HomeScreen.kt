@@ -7,51 +7,59 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.otriviafan.R
 import com.example.otriviafan.navigation.Screen
-import com.example.otriviafan.util.isOnline
 
 @Composable
 fun HomeScreen(navController: NavController) {
-    val context = LocalContext.current
-    val isConnected = remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        isConnected.value = isOnline(context)
-    }
+    var selectedTab by remember { mutableStateOf(0) }
 
     Scaffold(
         bottomBar = {
-            NavigationBar(containerColor = Color(0xFFE1BEE7).copy(alpha = 0.5f)) {
+            NavigationBar(containerColor = Color(0xFF8E24AA)) {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
                     label = { Text("Inicio") },
-                    selected = true,
-                    onClick = { /* Pantalla actual */ }
+                    selected = selectedTab == 0,
+                    onClick = {
+                        selectedTab = 0
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Tienda") },
+                    label = { Text("Tienda") },
+                    selected = selectedTab == 1,
+                    onClick = {
+                        selectedTab = 1
+                        navController.navigate(Screen.Store.route)
+                    }
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
                     label = { Text("Perfil") },
-                    selected = false,
-                    onClick = { navController.navigate(Screen.Profile.route) }
+                    selected = selectedTab == 2,
+                    onClick = {
+                        selectedTab = 2
+                        navController.navigate(Screen.Profile.route)
+                    }
                 )
             }
         }
-    ) { paddingValues ->
+    ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(padding)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.ot_sinlogo),
@@ -59,9 +67,8 @@ fun HomeScreen(navController: NavController) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-
             Box(
-                modifier = Modifier
+                Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.4f))
             )
@@ -69,73 +76,36 @@ fun HomeScreen(navController: NavController) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp),
+                    .padding(32.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "OT TriviaFan",
+                    text = "¡Bienvenido a OT Trivia Fan!",
                     style = MaterialTheme.typography.headlineLarge,
                     color = Color.White
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
-
                 Button(
-                    onClick = { navController.navigate(Screen.SinglePlayer.route) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF8E24AA),
-                        contentColor = Color.White
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(8.dp)
+                    onClick = { navController.navigate(Screen.LevelSelect.route) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E24AA))
                 ) {
-                    Text("Jugar modo individual")
+                    Text(text = "🎯 Modo Individual", color = Color.White)
                 }
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (isConnected.value) {
-                    Button(
-                        onClick = { navController.navigate(Screen.MultiPlayerEntry.route) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3949AB),
-                            contentColor = Color.White
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(8.dp)
-                    ) {
-                        Text("Jugar modo multijugador")
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { navController.navigate(Screen.Store.route) }, // 👈 Agregado
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00ACC1),
-                            contentColor = Color.White
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(8.dp)
-                    ) {
-                        Text("Tienda de Stickers y Fondos")
-                    }
-                } else {
-                    Text(
-                        text = "Conéctate a internet para desbloquear el modo multijugador y la tienda",
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                Button(
+                    onClick = { navController.navigate(Screen.MultiPlayerEntry.route) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3949AB))
+                ) {
+                    Text(text = "⚡ Modo Multijugador", color = Color.White)
                 }
             }
         }

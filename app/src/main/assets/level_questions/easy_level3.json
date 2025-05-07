@@ -1,0 +1,154 @@
+{
+  "questions": [
+    {
+      "questionText": "¿Qué concursante de OT 2020 ganó el programa?",
+      "answers": [
+        { "answerText": "Nia", "id": 301, "questionId": 1 },
+        { "answerText": "Eva", "id": 302, "questionId": 1 },
+        { "answerText": "Samantha", "id": 303, "questionId": 1 },
+        { "answerText": "Hugo", "id": 304, "questionId": 1 }
+      ],
+      "correctAnswerId": 301
+    },
+    {
+      "questionText": "¿Qué concursante interpretó 'Shake It Out' en la final de OT 2017?",
+      "answers": [
+        { "answerText": "Amaia", "id": 311, "questionId": 2 },
+        { "answerText": "Miriam", "id": 312, "questionId": 2 },
+        { "answerText": "Aitana", "id": 313, "questionId": 2 },
+        { "answerText": "Nerea", "id": 314, "questionId": 2 }
+      ],
+      "correctAnswerId": 311
+    },
+    {
+      "questionText": "¿Qué tema musical interpretaron juntos Alfred y Amaia en Eurovisión?",
+      "answers": [
+        { "answerText": "Tu canción", "id": 321, "questionId": 3 },
+        { "answerText": "Lo Malo", "id": 322, "questionId": 3 },
+        { "answerText": "Camina", "id": 323, "questionId": 3 },
+        { "answerText": "Díselo a la vida", "id": 324, "questionId": 3 }
+      ],
+      "correctAnswerId": 321
+    },
+    {
+      "questionText": "¿Qué concursante fue expulsado en la primera gala de OT 2018?",
+      "answers": [
+        { "answerText": "África", "id": 331, "questionId": 4 },
+        { "answerText": "Dave", "id": 332, "questionId": 4 },
+        { "answerText": "Carlos Right", "id": 333, "questionId": 4 },
+        { "answerText": "Famous", "id": 334, "questionId": 4 }
+      ],
+      "correctAnswerId": 331
+    },
+    {
+      "questionText": "¿Quién fue el presentador de OT 2020?",
+      "answers": [
+        { "answerText": "Roberto Leal", "id": 341, "questionId": 5 },
+        { "answerText": "Jesús Vázquez", "id": 342, "questionId": 5 },
+        { "answerText": "Carlos Sobera", "id": 343, "questionId": 5 },
+        { "answerText": "Toñi Moreno", "id": 344, "questionId": 5 }
+      ],
+      "correctAnswerId": 341
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2008 ganó el programa?",
+      "answers": [
+        { "answerText": "Pablo López", "id": 351, "questionId": 6 },
+        { "answerText": "Virginia Maestro", "id": 352, "questionId": 6 },
+        { "answerText": "Manu Guix", "id": 353, "questionId": 6 },
+        { "answerText": "Natalia", "id": 354, "questionId": 6 }
+      ],
+      "correctAnswerId": 352
+    },
+    {
+      "questionText": "¿Qué pareja sentimental surgió en OT 2017 y participó en Eurovisión?",
+      "answers": [
+        { "answerText": "Amaia y Alfred", "id": 361, "questionId": 7 },
+        { "answerText": "Aitana y Cepeda", "id": 362, "questionId": 7 },
+        { "answerText": "Ana Guerra y Roi", "id": 363, "questionId": 7 },
+        { "answerText": "Miriam y Agoney", "id": 364, "questionId": 7 }
+      ],
+      "correctAnswerId": 361
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2018 fue elegido para representar a España en Eurovisión 2019?",
+      "answers": [
+        { "answerText": "Miki Núñez", "id": 371, "questionId": 8 },
+        { "answerText": "Famous", "id": 372, "questionId": 8 },
+        { "answerText": "Carlos Right", "id": 373, "questionId": 8 },
+        { "answerText": "Natalia", "id": 374, "questionId": 8 }
+      ],
+      "correctAnswerId": 371
+    },
+    {
+      "questionText": "¿Qué miembro del jurado es conocido por su estilo directo y crítico?",
+      "answers": [
+        { "answerText": "Risto Mejide", "id": 381, "questionId": 9 },
+        { "answerText": "Manu Guix", "id": 382, "questionId": 9 },
+        { "answerText": "Mónica Naranjo", "id": 383, "questionId": 9 },
+        { "answerText": "Noemí Galera", "id": 384, "questionId": 9 }
+      ],
+      "correctAnswerId": 381
+    },
+    {
+      "questionText": "¿Qué concursante fue apodada 'la reina de las redes sociales' en OT 2017?",
+      "answers": [
+        { "answerText": "Aitana", "id": 391, "questionId": 10 },
+        { "answerText": "Amaia", "id": 392, "questionId": 10 },
+        { "answerText": "Nerea", "id": 393, "questionId": 10 },
+        { "answerText": "Ana Guerra", "id": 394, "questionId": 10 }
+      ],
+      "correctAnswerId": 391
+    },
+    {
+      "questionText": "¿Quién fue la directora de la Academia durante OT 2018?",
+      "answers": [
+        { "answerText": "Noemí Galera", "id": 401, "questionId": 11 },
+        { "answerText": "Nina", "id": 402, "questionId": 11 },
+        { "answerText": "Mónica Naranjo", "id": 403, "questionId": 11 },
+        { "answerText": "Eva Perales", "id": 404, "questionId": 11 }
+      ],
+      "correctAnswerId": 401
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2023 fue favorito en más de una gala?",
+      "answers": [
+        { "answerText": "Naiara", "id": 411, "questionId": 12 },
+        { "answerText": "Lucas", "id": 412, "questionId": 12 },
+        { "answerText": "Ruslana", "id": 413, "questionId": 12 },
+        { "answerText": "Juanjo", "id": 414, "questionId": 12 }
+      ],
+      "correctAnswerId": 411
+    },
+    {
+      "questionText": "¿Qué año marcó el regreso de OT con formato renovado en Prime Video?",
+      "answers": [
+        { "answerText": "2020", "id": 421, "questionId": 13 },
+        { "answerText": "2022", "id": 422, "questionId": 13 },
+        { "answerText": "2023", "id": 423, "questionId": 13 },
+        { "answerText": "2021", "id": 424, "questionId": 13 }
+      ],
+      "correctAnswerId": 423
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2005 es también conocido por su faceta de actor?",
+      "answers": [
+        { "answerText": "Edurne", "id": 431, "questionId": 14 },
+        { "answerText": "Sergio Rivero", "id": 432, "questionId": 14 },
+        { "answerText": "Leo Segarra", "id": 433, "questionId": 14 },
+        { "answerText": "Fran Dieli", "id": 434, "questionId": 14 }
+      ],
+      "correctAnswerId": 434
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2017 interpretó el tema 'Issues' en una gala?",
+      "answers": [
+        { "answerText": "Nerea", "id": 441, "questionId": 15 },
+        { "answerText": "Miriam", "id": 442, "questionId": 15 },
+        { "answerText": "Amaia", "id": 443, "questionId": 15 },
+        { "answerText": "Aitana", "id": 444, "questionId": 15 }
+      ],
+      "correctAnswerId": 441
+    }
+  ]
+}

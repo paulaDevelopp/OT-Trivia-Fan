@@ -1,0 +1,154 @@
+{
+  "questions": [
+    {
+      "questionText": "¿Qué concursante de OT 2001 fue el único en no cantar en solitario durante la Gala 0?",
+      "answers": [
+        { "answerText": "Alex Casademunt", "id": 9001, "questionId": 900 },
+        { "answerText": "Javián", "id": 9002, "questionId": 900 },
+        { "answerText": "Juan Camus", "id": 9003, "questionId": 900 },
+        { "answerText": "Rosa López", "id": 9004, "questionId": 900 }
+      ],
+      "correctAnswerId": 9001
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2018 fue apodado 'el filósofo' por sus reflexiones en la academia?",
+      "answers": [
+        { "answerText": "Dave", "id": 9011, "questionId": 901 },
+        { "answerText": "Damion", "id": 9012, "questionId": 901 },
+        { "answerText": "Famous", "id": 9013, "questionId": 901 },
+        { "answerText": "Joan", "id": 9014, "questionId": 901 }
+      ],
+      "correctAnswerId": 9011
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2009 fue finalista a pesar de estar nominado cuatro veces?",
+      "answers": [
+        { "answerText": "Mario", "id": 9021, "questionId": 902 },
+        { "answerText": "Víctor", "id": 9022, "questionId": 902 },
+        { "answerText": "Patricia", "id": 9023, "questionId": 902 },
+        { "answerText": "Bruno", "id": 9024, "questionId": 902 }
+      ],
+      "correctAnswerId": 9023
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2017 recibió el apodo de 'la leona gallega' por su potencia vocal?",
+      "answers": [
+        { "answerText": "Miriam", "id": 9031, "questionId": 903 },
+        { "answerText": "Nerea", "id": 9032, "questionId": 903 },
+        { "answerText": "Ana Guerra", "id": 9033, "questionId": 903 },
+        { "answerText": "Aitana", "id": 9034, "questionId": 903 }
+      ],
+      "correctAnswerId": 9031
+    },
+    {
+      "questionText": "¿Qué canción interpretaron conjuntamente David Bisbal y Chenoa en la gira post OT 2001?",
+      "answers": [
+        { "answerText": "Escondidos", "id": 9041, "questionId": 904 },
+        { "answerText": "Vivo por ella", "id": 9042, "questionId": 904 },
+        { "answerText": "Mi música es tu voz", "id": 9043, "questionId": 904 },
+        { "answerText": "Nada cambiará mi amor por ti", "id": 9044, "questionId": 904 }
+      ],
+      "correctAnswerId": 9041
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2020 fue el único en no ser nunca nominado por el jurado?",
+      "answers": [
+        { "answerText": "Flavio", "id": 9051, "questionId": 905 },
+        { "answerText": "Nia", "id": 9052, "questionId": 905 },
+        { "answerText": "Eva", "id": 9053, "questionId": 905 },
+        { "answerText": "Anajú", "id": 9054, "questionId": 905 }
+      ],
+      "correctAnswerId": 9052
+    },
+    {
+      "questionText": "¿Qué edición de OT fue presentada por Pilar Rubio?",
+      "answers": [
+        { "answerText": "OT 2009", "id": 9061, "questionId": 906 },
+        { "answerText": "OT 2008", "id": 9062, "questionId": 906 },
+        { "answerText": "OT 2011", "id": 9063, "questionId": 906 },
+        { "answerText": "OT 2006", "id": 9064, "questionId": 906 }
+      ],
+      "correctAnswerId": 9063
+    },
+    {
+      "questionText": "¿Qué canción cantó Famous en la final de OT 2018 que le dio la victoria?",
+      "answers": [
+        { "answerText": "And I Am Telling You I'm Not Going", "id": 9071, "questionId": 907 },
+        { "answerText": "Uptown Funk", "id": 9072, "questionId": 907 },
+        { "answerText": "What a Wonderful World", "id": 9073, "questionId": 907 },
+        { "answerText": "Man in the Mirror", "id": 9074, "questionId": 907 }
+      ],
+      "correctAnswerId": 9071
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2003 creó después el grupo 'Nena Daconte'?",
+      "answers": [
+        { "answerText": "Cristie", "id": 9081, "questionId": 908 },
+        { "answerText": "Mai Meneses", "id": 9082, "questionId": 908 },
+        { "answerText": "Nika", "id": 9083, "questionId": 908 },
+        { "answerText": "Sandra", "id": 9084, "questionId": 908 }
+      ],
+      "correctAnswerId": 9082
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2023 destacó por su dominio del inglés y repertorio internacional?",
+      "answers": [
+        { "answerText": "Martin", "id": 9091, "questionId": 909 },
+        { "answerText": "Chiara", "id": 9092, "questionId": 909 },
+        { "answerText": "Ruslana", "id": 9093, "questionId": 909 },
+        { "answerText": "Álvaro Mayo", "id": 9094, "questionId": 909 }
+      ],
+      "correctAnswerId": 9092
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2005 interpretó 'Angels' de Robbie Williams en su última gala?",
+      "answers": [
+        { "answerText": "Edurne", "id": 9101, "questionId": 910 },
+        { "answerText": "Soraya", "id": 9102, "questionId": 910 },
+        { "answerText": "Víctor", "id": 9103, "questionId": 910 },
+        { "answerText": "Sandra", "id": 9104, "questionId": 910 }
+      ],
+      "correctAnswerId": 9103
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2017 fue conocido por su amistad inseparable con Roi Méndez?",
+      "answers": [
+        { "answerText": "Cepeda", "id": 9111, "questionId": 911 },
+        { "answerText": "Alfred", "id": 9112, "questionId": 911 },
+        { "answerText": "Agoney", "id": 9113, "questionId": 911 },
+        { "answerText": "Ricky", "id": 9114, "questionId": 911 }
+      ],
+      "correctAnswerId": 9111
+    },
+    {
+      "questionText": "¿Qué canción cantaron todos los concursantes de OT 2018 como himno oficial?",
+      "answers": [
+        { "answerText": "Somos", "id": 9121, "questionId": 912 },
+        { "answerText": "Mi música es tu voz", "id": 9122, "questionId": 912 },
+        { "answerText": "Camina", "id": 9123, "questionId": 912 },
+        { "answerText": "This is Me", "id": 9124, "questionId": 912 }
+      ],
+      "correctAnswerId": 9121
+    },
+    {
+      "questionText": "¿Qué edición de OT fue la primera en emitirse exclusivamente en una plataforma digital (Amazon Prime)?",
+      "answers": [
+        { "answerText": "OT 2020", "id": 9131, "questionId": 913 },
+        { "answerText": "OT 2022", "id": 9132, "questionId": 913 },
+        { "answerText": "OT 2023", "id": 9133, "questionId": 913 },
+        { "answerText": "OT 2021", "id": 9134, "questionId": 913 }
+      ],
+      "correctAnswerId": 9133
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2011 abandonó voluntariamente el programa?",
+      "answers": [
+        { "answerText": "Geno", "id": 9141, "questionId": 914 },
+        { "answerText": "Álex Forriols", "id": 9142, "questionId": 914 },
+        { "answerText": "Moneiba", "id": 9143, "questionId": 914 },
+        { "answerText": "Ramil", "id": 9144, "questionId": 914 }
+      ],
+      "correctAnswerId": 9141
+    }
+  ]
+}

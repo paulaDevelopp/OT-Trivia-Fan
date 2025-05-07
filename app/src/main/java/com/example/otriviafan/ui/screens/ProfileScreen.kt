@@ -22,52 +22,50 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.otriviafan.R
 import com.example.otriviafan.data.entities.StoreItem
 import com.example.otriviafan.navigation.Screen
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
+import com.example.otriviafan.viewmodel.UserViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.tasks.await
 
 @Composable
 fun ProfileScreen(navController: NavHostController) {
-    val auth = FirebaseAuth.getInstance()
+    val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
     val uid = auth.currentUser?.uid
+    val viewModel: UserViewModel = viewModel()
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshUserData()
+    }
+
+    val points by viewModel.points.collectAsState()
+    val highestLevelUnlocked by viewModel.highestLevelUnlocked.collectAsState()
 
     var email by remember { mutableStateOf("") }
-    var points by remember { mutableStateOf(0) }
-    var stickers by remember { mutableStateOf<List<StoreItem>>(emptyList()) }
     var backgrounds by remember { mutableStateOf<List<StoreItem>>(emptyList()) }
 
     LaunchedEffect(uid) {
         uid?.let {
-            val db = FirebaseDatabase.getInstance().reference
+            val db = com.google.firebase.database.FirebaseDatabase.getInstance().reference
             val userRef = db.child("users").child(it)
             val storeRef = db.child("store_items")
 
             try {
-                // Cargar email
                 val emailSnap = userRef.child("email").get().await()
                 email = emailSnap.getValue(String::class.java) ?: ""
 
-                // Cargar puntos
-                val pointsSnap = userRef.child("points").get().await()
-                points = pointsSnap.getValue(Int::class.java) ?: 0
-
-                // Cargar compras
                 val purchasesSnap = userRef.child("purchases").get().await()
                 val purchasedIds = purchasesSnap.children.mapNotNull { it.key }
 
-                // Cargar todos los items
                 val storeSnap = storeRef.get().await()
-                val items = storeSnap.children.mapNotNull { it.getValue(StoreItem::class.java) }
+                val allItems = storeSnap.children.mapNotNull { it.getValue(StoreItem::class.java) }
 
-                stickers = items.filter { it.type == "sticker" && purchasedIds.contains(it.id) }
-                backgrounds = items.filter { it.type == "background" && purchasedIds.contains(it.id) }
+                // Ya no filtramos por "type"
+                backgrounds = allItems.filter { purchasedIds.contains(it.id) }
 
             } catch (e: Exception) {
-                e.printStackTrace() // Mejor manejar el error de forma bonita (mostrar un Toast por ejemplo)
+                e.printStackTrace()
             }
         }
     }
-
 
     Scaffold(
         bottomBar = {
@@ -99,10 +97,7 @@ fun ProfileScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxSize()
             )
 
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
-            )
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)))
 
             Column(
                 modifier = Modifier
@@ -115,25 +110,11 @@ fun ProfileScreen(navController: NavHostController) {
 
                 Text("Correo: $email", style = MaterialTheme.typography.bodyLarge, color = Color.White)
                 Text("Puntos: $points", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+                Text("Nivel máximo desbloqueado: $highestLevelUnlocked", style = MaterialTheme.typography.bodyLarge, color = Color.White)
 
                 Spacer(Modifier.height(24.dp))
                 Divider(color = Color.White)
                 Spacer(Modifier.height(16.dp))
-
-                Text("🎨 Stickers Canjeados", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.height(150.dp)) {
-                    items(stickers) { sticker ->
-                        Image(
-                            painter = rememberAsyncImagePainter(sticker.imageUrl),
-                            contentDescription = sticker.name,
-                            modifier = Modifier
-                                .size(100.dp)
-                                .padding(4.dp)
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(24.dp))
 
                 Text("🖼️ Fondos Canjeados", style = MaterialTheme.typography.titleMedium, color = Color.White)
                 LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.height(150.dp)) {

@@ -1,0 +1,154 @@
+{
+  "questions": [
+    {
+      "questionText": "¿Quién fue el ganador de OT 2018?",
+      "answers": [
+        { "answerText": "Famous", "id": 600, "questionId": 601 },
+        { "answerText": "Natalia", "id": 601, "questionId": 601 },
+        { "answerText": "Miki", "id": 602, "questionId": 601 },
+        { "answerText": "Julia", "id": 603, "questionId": 601 }
+      ],
+      "correctAnswerId": 600
+    },
+    {
+      "questionText": "¿Qué canción cantó Aitana en la final de OT 2017?",
+      "answers": [
+        { "answerText": "Issues", "id": 604, "questionId": 602 },
+        { "answerText": "Chandelier", "id": 605, "questionId": 602 },
+        { "answerText": "Arde", "id": 606, "questionId": 602 },
+        { "answerText": "Procuro olvidarte", "id": 607, "questionId": 602 }
+      ],
+      "correctAnswerId": 606
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2023 fue nominado cuatro semanas seguidas?",
+      "answers": [
+        { "answerText": "Álvaro Mayo", "id": 608, "questionId": 603 },
+        { "answerText": "Omar", "id": 609, "questionId": 603 },
+        { "answerText": "Martin", "id": 610, "questionId": 603 },
+        { "answerText": "Lucas", "id": 611, "questionId": 603 }
+      ],
+      "correctAnswerId": 611
+    },
+    {
+      "questionText": "¿Qué tema interpretó Amaia en su audición para OT 2017?",
+      "answers": [
+        { "answerText": "Starman", "id": 612, "questionId": 604 },
+        { "answerText": "Shake it Out", "id": 613, "questionId": 604 },
+        { "answerText": "Te regalo", "id": 614, "questionId": 604 },
+        { "answerText": "Soñar contigo", "id": 615, "questionId": 604 }
+      ],
+      "correctAnswerId": 612
+    },
+    {
+      "questionText": "¿Quién fue el presentador de OT 2023?",
+      "answers": [
+        { "answerText": "Roberto Leal", "id": 616, "questionId": 605 },
+        { "answerText": "Carlos Lozano", "id": 617, "questionId": 605 },
+        { "answerText": "Chenoa", "id": 618, "questionId": 605 },
+        { "answerText": "Noemí Galera", "id": 619, "questionId": 605 }
+      ],
+      "correctAnswerId": 618
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2017 protagonizó un musical tras el programa?",
+      "answers": [
+        { "answerText": "Cepeda", "id": 620, "questionId": 606 },
+        { "answerText": "Miriam", "id": 621, "questionId": 606 },
+        { "answerText": "Nerea", "id": 622, "questionId": 606 },
+        { "answerText": "Roi", "id": 623, "questionId": 606 }
+      ],
+      "correctAnswerId": 622
+    },
+    {
+      "questionText": "¿Cuál fue la canción grupal de la Gala 0 de OT 2023?",
+      "answers": [
+        { "answerText": "This Is Me", "id": 624, "questionId": 607 },
+        { "answerText": "Viva la vida", "id": 625, "questionId": 607 },
+        { "answerText": "La revolución sexual", "id": 626, "questionId": 607 },
+        { "answerText": "Y yo sigo aquí", "id": 627, "questionId": 607 }
+      ],
+      "correctAnswerId": 624
+    },
+    {
+      "questionText": "¿Quién fue directora de la Academia en OT 2020?",
+      "answers": [
+        { "answerText": "Nina", "id": 628, "questionId": 608 },
+        { "answerText": "Mónica Naranjo", "id": 629, "questionId": 608 },
+        { "answerText": "Noemí Galera", "id": 630, "questionId": 608 },
+        { "answerText": "Virginia Maestro", "id": 631, "questionId": 608 }
+      ],
+      "correctAnswerId": 630
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2023 fue conocido por su estilo rockero?",
+      "answers": [
+        { "answerText": "Martin", "id": 632, "questionId": 609 },
+        { "answerText": "Chiara", "id": 633, "questionId": 609 },
+        { "answerText": "Denna", "id": 634, "questionId": 609 },
+        { "answerText": "Álvaro Mayo", "id": 635, "questionId": 609 }
+      ],
+      "correctAnswerId": 632
+    },
+    {
+      "questionText": "¿Qué profesor ha estado presente desde OT 1 hasta OT 2020 como pianista y director musical?",
+      "answers": [
+        { "answerText": "Miqui Puig", "id": 636, "questionId": 610 },
+        { "answerText": "Manu Guix", "id": 637, "questionId": 610 },
+        { "answerText": "Àngel Llàcer", "id": 638, "questionId": 610 },
+        { "answerText": "Iván Labanda", "id": 639, "questionId": 610 }
+      ],
+      "correctAnswerId": 637
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2005 ganó el programa?",
+      "answers": [
+        { "answerText": "Edurne", "id": 640, "questionId": 611 },
+        { "answerText": "Sergio Rivero", "id": 641, "questionId": 611 },
+        { "answerText": "Víctor Estévez", "id": 642, "questionId": 611 },
+        { "answerText": "Soraya", "id": 643, "questionId": 611 }
+      ],
+      "correctAnswerId": 641
+    },
+    {
+      "questionText": "¿Cuál fue la canción original compuesta por los concursantes de OT 2020?",
+      "answers": [
+        { "answerText": "Camina", "id": 644, "questionId": 612 },
+        { "answerText": "Somos", "id": 645, "questionId": 612 },
+        { "answerText": "Sal de mí", "id": 646, "questionId": 612 },
+        { "answerText": "Díselo a la vida", "id": 647, "questionId": 612 }
+      ],
+      "correctAnswerId": 647
+    },
+    {
+      "questionText": "¿Quién fue la última expulsada antes de la final de OT 2023?",
+      "answers": [
+        { "answerText": "Denna", "id": 648, "questionId": 613 },
+        { "answerText": "Chiara", "id": 649, "questionId": 613 },
+        { "answerText": "Salma", "id": 650, "questionId": 613 },
+        { "answerText": "Juanjo", "id": 651, "questionId": 613 }
+      ],
+      "correctAnswerId": 649
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2018 representó a España en Eurovisión 2019?",
+      "answers": [
+        { "answerText": "Natalia", "id": 652, "questionId": 614 },
+        { "answerText": "Famous", "id": 653, "questionId": 614 },
+        { "answerText": "Miki", "id": 654, "questionId": 614 },
+        { "answerText": "Julia", "id": 655, "questionId": 614 }
+      ],
+      "correctAnswerId": 654
+    },
+    {
+      "questionText": "¿Qué miembro del jurado fue habitual en OT 2017 y OT 2018?",
+      "answers": [
+        { "answerText": "Joe Pérez-Orive", "id": 656, "questionId": 615 },
+        { "answerText": "Manuel Martos", "id": 657, "questionId": 615 },
+        { "answerText": "Mónica Naranjo", "id": 658, "questionId": 615 },
+        { "answerText": "Ana Torroja", "id": 659, "questionId": 615 }
+      ],
+      "correctAnswerId": 656
+    }
+  ]
+}

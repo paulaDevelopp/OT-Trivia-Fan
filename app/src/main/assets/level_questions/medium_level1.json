@@ -1,0 +1,154 @@
+{
+  "questions": [
+    {
+      "questionText": "¿Qué edición de OT fue cancelada temporalmente por la pandemia?",
+      "answers": [
+        { "answerText": "2018", "id": 400, "questionId": 401 },
+        { "answerText": "2019", "id": 401, "questionId": 401 },
+        { "answerText": "2020", "id": 402, "questionId": 401 },
+        { "answerText": "2021", "id": 403, "questionId": 401 }
+      ],
+      "correctAnswerId": 402
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2020 fue apodada como 'la jurado' por sus compañeros?",
+      "answers": [
+        { "answerText": "Samantha", "id": 404, "questionId": 402 },
+        { "answerText": "Eva", "id": 405, "questionId": 402 },
+        { "answerText": "Anajú", "id": 406, "questionId": 402 },
+        { "answerText": "Maialen", "id": 407, "questionId": 402 }
+      ],
+      "correctAnswerId": 404
+    },
+    {
+      "questionText": "¿Cuál fue el número total de galas en OT 2017, incluyendo Eurovisión?",
+      "answers": [
+        { "answerText": "12", "id": 408, "questionId": 403 },
+        { "answerText": "13", "id": 409, "questionId": 403 },
+        { "answerText": "14", "id": 410, "questionId": 403 },
+        { "answerText": "16", "id": 411, "questionId": 403 }
+      ],
+      "correctAnswerId": 411
+    },
+    {
+      "questionText": "¿Qué concursante hizo historia por cantar en euskera en una gala?",
+      "answers": [
+        { "answerText": "Maialen", "id": 412, "questionId": 404 },
+        { "answerText": "Eva", "id": 413, "questionId": 404 },
+        { "answerText": "Samantha", "id": 414, "questionId": 404 },
+        { "answerText": "Anne", "id": 415, "questionId": 404 }
+      ],
+      "correctAnswerId": 412
+    },
+    {
+      "questionText": "¿Quién fue el primer expulsado de OT 2020?",
+      "answers": [
+        { "answerText": "Ariadna", "id": 416, "questionId": 405 },
+        { "answerText": "Bruno", "id": 417, "questionId": 405 },
+        { "answerText": "Nick", "id": 418, "questionId": 405 },
+        { "answerText": "Eli", "id": 419, "questionId": 405 }
+      ],
+      "correctAnswerId": 416
+    },
+    {
+      "questionText": "¿Qué concursante cantó 'City of Stars' con Alfred en OT 2017?",
+      "answers": [
+        { "answerText": "Amaia", "id": 420, "questionId": 406 },
+        { "answerText": "Miriam", "id": 421, "questionId": 406 },
+        { "answerText": "Aitana", "id": 422, "questionId": 406 },
+        { "answerText": "Ana Guerra", "id": 423, "questionId": 406 }
+      ],
+      "correctAnswerId": 420
+    },
+    {
+      "questionText": "¿Qué concursante ganó el premio a mejor actuación en la gala 10 de OT 2020?",
+      "answers": [
+        { "answerText": "Flavio", "id": 424, "questionId": 407 },
+        { "answerText": "Nia", "id": 425, "questionId": 407 },
+        { "answerText": "Samantha", "id": 426, "questionId": 407 },
+        { "answerText": "Maialen", "id": 427, "questionId": 407 }
+      ],
+      "correctAnswerId": 425
+    },
+    {
+      "questionText": "¿Qué dúo interpretó 'Con las ganas' en una gala de OT 2017?",
+      "answers": [
+        { "answerText": "Aitana y Cepeda", "id": 428, "questionId": 408 },
+        { "answerText": "Amaia y Alfred", "id": 429, "questionId": 408 },
+        { "answerText": "Miriam y Agoney", "id": 430, "questionId": 408 },
+        { "answerText": "Ana Guerra y Roi", "id": 431, "questionId": 408 }
+      ],
+      "correctAnswerId": 428
+    },
+    {
+      "questionText": "¿Qué concursante recibió un pase directo en OT 2023 por ser favorito tres veces?",
+      "answers": [
+        { "answerText": "Naiara", "id": 432, "questionId": 409 },
+        { "answerText": "Lucas", "id": 433, "questionId": 409 },
+        { "answerText": "Ruslana", "id": 434, "questionId": 409 },
+        { "answerText": "Juanjo", "id": 435, "questionId": 409 }
+      ],
+      "correctAnswerId": 432
+    },
+    {
+      "questionText": "¿Qué exconcursante de OT ha trabajado como juez en un talent musical?",
+      "answers": [
+        { "answerText": "Edurne", "id": 436, "questionId": 410 },
+        { "answerText": "Chenoa", "id": 437, "questionId": 410 },
+        { "answerText": "Bisbal", "id": 438, "questionId": 410 },
+        { "answerText": "Aitana", "id": 439, "questionId": 410 }
+      ],
+      "correctAnswerId": 437
+    },
+    {
+      "questionText": "¿Qué canción grupal fue himno en OT 2018?",
+      "answers": [
+        { "answerText": "Somos", "id": 440, "questionId": 411 },
+        { "answerText": "Camina", "id": 441, "questionId": 411 },
+        { "answerText": "Díselo a la vida", "id": 442, "questionId": 411 },
+        { "answerText": "Tu canción", "id": 443, "questionId": 411 }
+      ],
+      "correctAnswerId": 440
+    },
+    {
+      "questionText": "¿Quién dirigía las clases de interpretación en OT 2020?",
+      "answers": [
+        { "answerText": "Ivan Labanda", "id": 444, "questionId": 412 },
+        { "answerText": "Javier Ambrossi", "id": 445, "questionId": 412 },
+        { "answerText": "Manu Guix", "id": 446, "questionId": 412 },
+        { "answerText": "Ángel Llàcer", "id": 447, "questionId": 412 }
+      ],
+      "correctAnswerId": 444
+    },
+    {
+      "questionText": "¿Quién representó a España en Eurovisión 2020 tras OT?",
+      "answers": [
+        { "answerText": "Blas Cantó", "id": 448, "questionId": 413 },
+        { "answerText": "Nia", "id": 449, "questionId": 413 },
+        { "answerText": "Amaia", "id": 450, "questionId": 413 },
+        { "answerText": "Aitana", "id": 451, "questionId": 413 }
+      ],
+      "correctAnswerId": 448
+    },
+    {
+      "questionText": "¿Qué concursante tuvo que abandonar temporalmente OT 2020 por problemas de salud?",
+      "answers": [
+        { "answerText": "Samantha", "id": 452, "questionId": 414 },
+        { "answerText": "Bruno", "id": 453, "questionId": 414 },
+        { "answerText": "Nick", "id": 454, "questionId": 414 },
+        { "answerText": "Eli", "id": 455, "questionId": 414 }
+      ],
+      "correctAnswerId": 453
+    },
+    {
+      "questionText": "¿Qué concursante fue el último expulsado antes de la final de OT 2018?",
+      "answers": [
+        { "answerText": "Sabela", "id": 456, "questionId": 415 },
+        { "answerText": "Miki", "id": 457, "questionId": 415 },
+        { "answerText": "Carlos Right", "id": 458, "questionId": 415 },
+        { "answerText": "Julia", "id": 459, "questionId": 415 }
+      ],
+      "correctAnswerId": 456
+    }
+  ]
+}

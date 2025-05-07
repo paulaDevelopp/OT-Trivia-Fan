@@ -1,0 +1,154 @@
+{
+  "questions": [
+    {
+      "questionText": "¿Qué concursante de OT 2006 fue nominado por el jurado en todas sus galas hasta ser expulsado?",
+      "answers": [
+        { "answerText": "Mercedes", "id": 800, "questionId": 801 },
+        { "answerText": "Cristina", "id": 801, "questionId": 801 },
+        { "answerText": "Javier", "id": 802, "questionId": 801 },
+        { "answerText": "Daniel", "id": 803, "questionId": 801 }
+      ],
+      "correctAnswerId": 802
+    },
+    {
+      "questionText": "¿Qué instrumento tocó Pablo López en su casting final de OT 2008 mientras interpretaba 'Jealous Guy'?",
+      "answers": [
+        { "answerText": "Piano", "id": 804, "questionId": 802 },
+        { "answerText": "Guitarra", "id": 805, "questionId": 802 },
+        { "answerText": "Teclado eléctrico", "id": 806, "questionId": 802 },
+        { "answerText": "Ninguno", "id": 807, "questionId": 802 }
+      ],
+      "correctAnswerId": 804
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2005 fue salvada por los profesores en más ocasiones?",
+      "answers": [
+        { "answerText": "Sandra", "id": 808, "questionId": 803 },
+        { "answerText": "Edurne", "id": 809, "questionId": 803 },
+        { "answerText": "Vanessa", "id": 810, "questionId": 803 },
+        { "answerText": "Soraya", "id": 811, "questionId": 803 }
+      ],
+      "correctAnswerId": 810
+    },
+    {
+      "questionText": "¿Qué canción de Zahara interpretó Amaia en OT 2017, considerada una de las actuaciones más emotivas del programa?",
+      "answers": [
+        { "answerText": "Con las ganas", "id": 812, "questionId": 804 },
+        { "answerText": "Crash", "id": 813, "questionId": 804 },
+        { "answerText": "Hoy la bestia cena en casa", "id": 814, "questionId": 804 },
+        { "answerText": "El deshielo", "id": 815, "questionId": 804 }
+      ],
+      "correctAnswerId": 812
+    },
+    {
+      "questionText": "¿Qué edición de OT contó con una academia completamente digitalizada y conectada con redes sociales en tiempo real?",
+      "answers": [
+        { "answerText": "OT 2017", "id": 816, "questionId": 805 },
+        { "answerText": "OT 2020", "id": 817, "questionId": 805 },
+        { "answerText": "OT 2008", "id": 818, "questionId": 805 },
+        { "answerText": "OT 2023", "id": 819, "questionId": 805 }
+      ],
+      "correctAnswerId": 817
+    },
+    {
+      "questionText": "¿Cuál fue la canción grupal de la gala 0 en OT 2018 que permitió a Miki destacar y ser favorito?",
+      "answers": [
+        { "answerText": "This is Me", "id": 820, "questionId": 806 },
+        { "answerText": "Camina", "id": 821, "questionId": 806 },
+        { "answerText": "Eloise", "id": 822, "questionId": 806 },
+        { "answerText": "La revolución sexual", "id": 823, "questionId": 806 }
+      ],
+      "correctAnswerId": 822
+    },
+    {
+      "questionText": "¿Qué canción cantó Flavio en su primera nominación de OT 2020 que le salvó de la expulsión?",
+      "answers": [
+        { "answerText": "Your Man", "id": 824, "questionId": 807 },
+        { "answerText": "Calma", "id": 825, "questionId": 807 },
+        { "answerText": "That's Life", "id": 826, "questionId": 807 },
+        { "answerText": "Copenhague", "id": 827, "questionId": 807 }
+      ],
+      "correctAnswerId": 824
+    },
+    {
+      "questionText": "¿Qué tema cantó Ana Guerra en la semifinal de OT 2017 que no fue seleccionado para Eurovisión pero se hizo popular?",
+      "answers": [
+        { "answerText": "El Remedio", "id": 828, "questionId": 808 },
+        { "answerText": "Lo Malo", "id": 829, "questionId": 808 },
+        { "answerText": "Chico malo", "id": 830, "questionId": 808 },
+        { "answerText": "La Bikina", "id": 831, "questionId": 808 }
+      ],
+      "correctAnswerId": 828
+    },
+    {
+      "questionText": "¿Qué integrante del profesorado de OT 2018 fue criticado por su falta de experiencia musical directa?",
+      "answers": [
+        { "answerText": "Itziar Castro", "id": 832, "questionId": 809 },
+        { "answerText": "Los Javis", "id": 833, "questionId": 809 },
+        { "answerText": "Manu Guix", "id": 834, "questionId": 809 },
+        { "answerText": "Noemí Galera", "id": 835, "questionId": 809 }
+      ],
+      "correctAnswerId": 832
+    },
+    {
+      "questionText": "¿Cuál fue el single debut de Lorena, ganadora de OT 2006, tras el programa?",
+      "answers": [
+        { "answerText": "Sin Miedo", "id": 836, "questionId": 810 },
+        { "answerText": "Esta vez", "id": 837, "questionId": 810 },
+        { "answerText": "Otro Amor Vendrá", "id": 838, "questionId": 810 },
+        { "answerText": "Boig per tu", "id": 839, "questionId": 810 }
+      ],
+      "correctAnswerId": 837
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2023 interpretó una canción original escrita por sí mismo en la gala 5?",
+      "answers": [
+        { "answerText": "Omar", "id": 840, "questionId": 811 },
+        { "answerText": "Chiara", "id": 841, "questionId": 811 },
+        { "answerText": "Lucas", "id": 842, "questionId": 811 },
+        { "answerText": "Paul", "id": 843, "questionId": 811 }
+      ],
+      "correctAnswerId": 840
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2017 compuso la canción 'Et vull veure' en catalán durante su estancia en la academia?",
+      "answers": [
+        { "answerText": "Amaia", "id": 844, "questionId": 812 },
+        { "answerText": "Alfred", "id": 845, "questionId": 812 },
+        { "answerText": "Miriam", "id": 846, "questionId": 812 },
+        { "answerText": "Agoney", "id": 847, "questionId": 812 }
+      ],
+      "correctAnswerId": 845
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2009 firmó posteriormente con una discográfica francesa y grabó en ese idioma?",
+      "answers": [
+        { "answerText": "Mario", "id": 848, "questionId": 813 },
+        { "answerText": "Patricia", "id": 849, "questionId": 813 },
+        { "answerText": "Bruno", "id": 850, "questionId": 813 },
+        { "answerText": "Jon", "id": 851, "questionId": 813 }
+      ],
+      "correctAnswerId": 849
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2018 estudió ingeniería aeroespacial antes de ingresar al programa?",
+      "answers": [
+        { "answerText": "Miki", "id": 852, "questionId": 814 },
+        { "answerText": "Carlos Right", "id": 853, "questionId": 814 },
+        { "answerText": "Dave", "id": 854, "questionId": 814 },
+        { "answerText": "Sabela", "id": 855, "questionId": 814 }
+      ],
+      "correctAnswerId": 855
+    },
+    {
+      "questionText": "¿Qué concursante de OT 2020 se volvió viral por su versión alternativa de 'Perfect' en catalán?",
+      "answers": [
+        { "answerText": "Eva", "id": 856, "questionId": 815 },
+        { "answerText": "Maialen", "id": 857, "questionId": 815 },
+        { "answerText": "Gèrard", "id": 858, "questionId": 815 },
+        { "answerText": "Flavio", "id": 859, "questionId": 815 }
+      ],
+      "correctAnswerId": 858
+    }
+  ]
+}

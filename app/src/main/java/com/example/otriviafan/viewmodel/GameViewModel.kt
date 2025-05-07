@@ -23,86 +23,97 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score
 
-    val usedQuestionIds = mutableSetOf<Int>()
+    private val _vidas = MutableStateFlow(3)
+    val vidas: StateFlow<Int> = _vidas
 
-    var hasUpdatedScore = false
+    private val _nivelActual = MutableStateFlow(1)
+    val nivelActual: StateFlow<Int> = _nivelActual
 
-    // 🚀 NUEVOS CAMPOS PARA NIVELES Y LOGROS
-    private val _nivel = MutableStateFlow(1)
-    val nivel: StateFlow<Int> = _nivel
+    private val _aciertosEnEsteNivel = MutableStateFlow(0)
+    val aciertosEnEsteNivel: StateFlow<Int> = _aciertosEnEsteNivel
 
-    private val _logros = MutableStateFlow<Set<String>>(emptySet())
-    val logros: StateFlow<Set<String>> = _logros
+    private val _fallosConsecutivos = MutableStateFlow(0)
+    val fallosConsecutivos: StateFlow<Int> = _fallosConsecutivos
 
-    fun loadQuestions(excludeIds: Set<Int> = emptySet()) {
+    private val _nivelSuperado = MutableStateFlow(false)
+    val nivelSuperado: StateFlow<Boolean> = _nivelSuperado
+
+    private val _vidasAgotadas = MutableStateFlow(false)
+    val vidasAgotadas: StateFlow<Boolean> = _vidasAgotadas
+
+    private var usadoReintentar = false
+    var puntosJugador = 0
+
+    private val usedQuestionIds = mutableSetOf<Int>()
+
+    val numeroPreguntas = 5;
+
+    fun iniciarNivel(nivel: Int) {
+        _nivelActual.value = nivel
+        _vidas.value = 3
+        _score.value = 0
+        _aciertosEnEsteNivel.value = 0
+        _fallosConsecutivos.value = 0
+        _currentQuestionIndex.value = 0
+        _nivelSuperado.value = false
+        _vidasAgotadas.value = false
+        usadoReintentar = false
+        usedQuestionIds.clear()
+
         viewModelScope.launch {
-            try {
-                val firebaseQuestions = repository.getQuestionsFromFirebase()
-                    .filterNot { it.id in excludeIds }
-                    .shuffled()
-                    .take(10)
-                _questions.value = firebaseQuestions
-                usedQuestionIds.addAll(firebaseQuestions.map { it.id })
-                if (firebaseQuestions.isNotEmpty()) {
-                    _answers.value = firebaseQuestions[0].answers.shuffled()
-                }
-            } catch (e: Exception) {
-                _questions.value = emptyList()
+            val firebaseQuestions = repository.getQuestionsByLevelIndex(nivel)
+
+                .filterNot { it.id in usedQuestionIds }
+                .shuffled()
+                .take(numeroPreguntas) //preguntas por nivel
+
+            _questions.value = firebaseQuestions
+            if (firebaseQuestions.isNotEmpty()) {
+                _answers.value = firebaseQuestions[0].answers.shuffled()
             }
         }
     }
 
-    fun answerQuestion(selectedAnswer: AnswerEntity, userId: String) {
-        val currentQuestion = _questions.value[_currentQuestionIndex.value]
-        val isCorrect = selectedAnswer.id == currentQuestion.correctAnswerId
-        if (isCorrect) _score.value += 1
+    fun responder(answer: AnswerEntity) {
+        val correcta = questions.value[currentQuestionIndex.value].correctAnswerId == answer.id
 
-        _nivel.value = calcularNivel(_score.value)
-        comprobarLogros()
+        if (correcta) {
+            _score.value += 1
+            _aciertosEnEsteNivel.value += 1
+            _fallosConsecutivos.value = 0
+        } else {
+            _fallosConsecutivos.value += 1
+            if (_fallosConsecutivos.value == 2) {
+                _vidas.value = (_vidas.value - 1).coerceAtLeast(0)
+                _fallosConsecutivos.value = 0
+                if (_vidas.value == 0) {
+                    _vidasAgotadas.value = true
+                }
+            }
+        }
 
-        viewModelScope.launch {
-            repository.saveProgress(
-                userId = userId,
-                questionId = currentQuestion.id,
-                correct = isCorrect
-            )
+        if (_aciertosEnEsteNivel.value >= numeroPreguntas) {
+            _nivelSuperado.value = true
         }
     }
 
-    fun nextQuestion() {
-        val nextIndex = _currentQuestionIndex.value + 1
-        if (nextIndex < _questions.value.size) {
-            _currentQuestionIndex.value = nextIndex
-            _answers.value = _questions.value[nextIndex].answers.shuffled()
+    fun siguientePregunta() {
+        _currentQuestionIndex.value += 1
+        if (_currentQuestionIndex.value < _questions.value.size) {
+            _answers.value = _questions.value[_currentQuestionIndex.value].answers.shuffled()
         }
     }
 
-    fun resetGame() {
-        _score.value = 0
-        _currentQuestionIndex.value = 0
-        hasUpdatedScore = false
-        loadQuestions(excludeIds = usedQuestionIds)
+    fun puedeReintentar(): Boolean {
+        return puntosJugador >= 20 && !usadoReintentar
     }
 
-    // 🚀 FUNCIONES DE NIVELES Y LOGROS
-    private fun calcularNivel(aciertos: Int): Int {
-        return when {
-            aciertos <= 10 -> 1
-            aciertos <= 25 -> 2
-            aciertos <= 50 -> 3
-            aciertos <= 80 -> 4
-            aciertos <= 120 -> 5
-            else -> 6
+    fun reintentarNivel() {
+        if (puedeReintentar()) {
+            puntosJugador -= 20
+            _vidas.value = 3
+            _vidasAgotadas.value = false
+            usadoReintentar = true
         }
-    }
-
-    private fun comprobarLogros() {
-        val nuevosLogros = mutableSetOf<String>()
-
-        if (score.value >= 1) nuevosLogros.add("primer_acierto")
-        if (score.value >= 10) nuevosLogros.add("racha_10")
-        if (_nivel.value >= 5) nuevosLogros.add("maestro_musical")
-
-        _logros.value = nuevosLogros
     }
 }

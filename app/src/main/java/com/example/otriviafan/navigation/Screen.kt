@@ -13,4 +13,12 @@ sealed class Screen(val route: String) {
     object MultiPlayerGame : Screen("multiplayer_game")
     object MultiPlayerResult : Screen("multiplayer_result")
     object Store : Screen("store")
+
+    // 🚀 FALTABA ESTO:
+    object LevelSelect : Screen("level_select")
+
+    // Nivel jugable con parámetro
+    object LevelGame : Screen("level_game/{levelId}") {
+        fun createRoute(levelId: Int) = "level_game/$levelId"
+    }
 }

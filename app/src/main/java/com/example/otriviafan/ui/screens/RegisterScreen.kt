@@ -17,10 +17,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.otriviafan.R
+import com.example.otriviafan.data.Repository
 import com.example.otriviafan.navigation.Screen
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,6 +29,7 @@ import kotlinx.coroutines.launch
 fun RegisterScreen(navController: NavController) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
+    val repository = remember { Repository() }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -63,133 +65,120 @@ fun RegisterScreen(navController: NavController) {
                     titleContentColor = Color.White
                 )
             )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.weight(3.2f))
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email", color = Color.White) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                )
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Contraseña", color = Color.White) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                )
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                label = { Text("Confirmar contraseña", color = Color.White) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                )
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    if (password == confirmPassword) {
-                        isLoading = true
-                        auth.createUserWithEmailAndPassword(email, password)
-                            .addOnCompleteListener { task ->
-                                isLoading = false
-                                if (task.isSuccessful) {
-                                    val uid = task.result.user?.uid
-                                    uid?.let { userId ->
-                                        val userRef = FirebaseDatabase.getInstance().reference
-                                            .child("users")
-                                            .child(userId)
-
-                                        val user = mapOf(
-                                            "email" to email,
-                                            "points" to 0,
-                                            "createdAt" to System.currentTimeMillis() / 1000
-                                        )
-                                        userRef.setValue(user)
-
-                                        // 🚀 Aquí añadimos asignación de stickers iniciales
-                                        val repository = com.example.otriviafan.data.Repository()
-
-                                        // Ejecutar la asignación
-                                        GlobalScope.launch {
-                                            repository.assignInitialItemsIfNeeded(userId)
-                                        }
-                                    }
-
-                                    Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
-                                    navController.navigate(Screen.Login.route)
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Error: ${task.exception?.message}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-
-                    } else {
-                        Toast.makeText(context, "Las contraseñas no coinciden", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                },
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF8E24AA),
-                    contentColor = Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(8.dp)
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
-                } else {
-                    Text("Crear Cuenta")
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            TextButton(onClick = { navController.navigate(Screen.Login.route) }) {
-                Text("¿Ya tienes cuenta? Inicia sesión", color = Color.White)
-            }
+                Spacer(modifier = Modifier.weight(3.2f))
 
-            Spacer(modifier = Modifier.weight(1f))
-        }
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email", color = Color.White) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Contraseña", color = Color.White) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirmar contraseña", color = Color.White) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        if (password == confirmPassword) {
+                            isLoading = true
+                            auth.createUserWithEmailAndPassword(email, password)
+                                .addOnCompleteListener { task ->
+                                    isLoading = false
+                                    if (task.isSuccessful) {
+                                        val uid = task.result.user?.uid
+                                        uid?.let { userId ->
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                repository.initializeNewUser(userId, email)
+                                                repository.assignInitialItemsIfNeeded(userId)
+                                            }
+                                        }
+
+                                        Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
+                                        navController.navigate(Screen.Login.route)
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "Error: ${task.exception?.message}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+
+                        } else {
+                            Toast.makeText(context, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF8E24AA),
+                        contentColor = Color.White
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(8.dp)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
+                    } else {
+                        Text("Crear Cuenta")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TextButton(onClick = { navController.navigate(Screen.Login.route) }) {
+                    Text("¿Ya tienes cuenta? Inicia sesión", color = Color.White)
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+            }
         }
     }
 }

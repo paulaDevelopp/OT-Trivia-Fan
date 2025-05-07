@@ -13,7 +13,9 @@ data class Match(
     var currentWinner: String? = null,
     var answered: Map<String, Boolean> = emptyMap(),
     var questions: List<QuestionWithAnswers> = emptyList(),
-    var status: String = "waiting"
+    var status: String = "waiting",
+    val difficulty: String = "",
+    val level: Int = 0
 ) {
     constructor() : this("", "", null, 0, 0, 0, null, emptyMap(), emptyList(), "waiting")
 }

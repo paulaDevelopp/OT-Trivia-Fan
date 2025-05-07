@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "22822208216",
+    "project_id": "otriviafan",
+    "storage_bucket": "otriviafan.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:22822208216:android:470050650c8e6d3f3a4dad",
+        "android_client_info": {
+          "package_name": "com.example.otriviafan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC356Tt67kOblVKA-hNeht87Q0li3JgqXY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
