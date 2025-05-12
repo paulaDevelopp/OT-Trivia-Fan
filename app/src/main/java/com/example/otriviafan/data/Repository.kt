@@ -3,9 +3,11 @@ package com.example.otriviafan.data
 import com.example.otriviafan.data.entities.AnswerEntity
 import com.example.otriviafan.data.entities.StoreItem
 import com.example.otriviafan.data.model.Match
+import com.example.otriviafan.data.model.PuntosUsuario
 import com.example.otriviafan.data.model.QuestionWithAnswers
+import com.example.otriviafan.data.model.WallpaperItem
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -14,16 +16,14 @@ class Repository {
     private val auth = FirebaseAuth.getInstance()
     private val realtimeDb = FirebaseDatabase.getInstance().reference
 
-    // ---------------------------
     // USUARIO
-    // ---------------------------
     suspend fun initializeNewUser(userId: String, email: String) {
         val userRef = realtimeDb.child("users").child(userId)
         val exists = userRef.get().await().exists()
         if (!exists) {
             val initialData = mapOf(
                 "email" to email,
-                "points" to 20, //20 puntos iniciales
+                "points" to 20,
                 "highestLevelUnlocked" to 1,
                 "usedRetryPerLevel" to mapOf<String, Boolean>()
             )
@@ -31,35 +31,28 @@ class Repository {
         }
     }
 
-    // ---------------------------
     // PREGUNTAS
-    // ---------------------------
-
     suspend fun getQuestionsByLevelIndex(index: Int): List<QuestionWithAnswers> {
         val db = FirebaseFirestore.getInstance()
         val snapshot = db.collection("questions_by_level").get().await()
 
-        val orderedDocs = snapshot.documents
-            .mapNotNull { doc ->
-                val name = doc.id
-                val parts = name.split("_level")
-                if (parts.size == 2) {
-                    val difficulty = parts[0]
-                    val levelNumber = parts[1].toIntOrNull()
-                    if (levelNumber != null) {
-                        Triple(name, difficulty, levelNumber)
-                    } else null
-                } else null
-            }
-            .sortedWith(compareBy<Triple<String, String, Int>>(
-                { when (it.second) {
-                    "easy" -> 0
-                    "medium" -> 1
-                    "difficult" -> 2
-                    else -> 3
-                }},
-                { it.third }
-            ))
+        val orderedDocs = snapshot.documents.mapNotNull { doc ->
+            val name = doc.id
+            val parts = name.split("_level")
+            if (parts.size == 2) {
+                val difficulty = parts[0]
+                val levelNumber = parts[1].toIntOrNull()
+                if (levelNumber != null) Triple(name, difficulty, levelNumber) else null
+            } else null
+        }.sortedWith(compareBy<Triple<String, String, Int>>(
+            { when (it.second) {
+                "easy" -> 0
+                "medium" -> 1
+                "difficult" -> 2
+                else -> 3
+            } },
+            { it.third }
+        ))
 
         val docName = orderedDocs.getOrNull(index - 1)?.first ?: return emptyList()
         val doc = db.collection("questions_by_level").document(docName).get().await()
@@ -83,12 +76,9 @@ class Repository {
                 correctAnswerId = correctAnswerId
             )
         }
-
     }
 
-    // ---------------------------
     // TIENDA
-    // ---------------------------
     suspend fun assignInitialItemsIfNeeded(userId: String) {
         val userRef = realtimeDb.child("users").child(userId)
         val snapshot = userRef.child("purchases").get().await()
@@ -126,36 +116,123 @@ class Repository {
         }
     }
 
-    // ---------------------------
+    // WALLPAPERS
+    suspend fun getAvailableWallpapersForUserLevel(userLevel: Int): List<WallpaperItem> {
+        val db = FirebaseFirestore.getInstance()
+
+        val difficulties = when {
+            userLevel <= 4 -> listOf("easy")
+            userLevel <= 8 -> listOf("easy", "medium")
+            else -> listOf("easy", "medium", "difficult")
+        }
+
+        val wallpapers = mutableListOf<WallpaperItem>()
+        for (difficulty in difficulties) {
+            val snapshot = db.collection("wallpapers")
+                .whereEqualTo("difficulty", difficulty)
+                .get().await()
+
+            wallpapers.addAll(snapshot.documents.mapNotNull { doc ->
+                val filename = doc.getString("filename") ?: return@mapNotNull null
+                val url = doc.getString("url") ?: return@mapNotNull null
+                val price = doc.getLong("price")?.toInt() ?: 50
+
+                WallpaperItem(filename, url, difficulty, price)
+            })
+        }
+
+        return wallpapers
+    }
+
+    suspend fun buyWallpaper(userId: String, wallpaper: WallpaperItem) {
+        val userRef = realtimeDb.child("users").child(userId)
+        val snapshot = userRef.child("puntos").get().await()
+        val current = snapshot.getValue(PuntosUsuario::class.java) ?: PuntosUsuario()
+
+        if (current.total >= wallpaper.price) {
+            val updated = current.copy(
+                total = current.total - wallpaper.price,
+                ultimaActualizacion = System.currentTimeMillis()
+            )
+            userRef.child("puntos").setValue(updated).await()
+            userRef.child("purchases").child(wallpaper.filename).setValue(true).await()
+        } else {
+            throw Exception("No tienes suficientes puntos")
+        }
+    }
+
+    suspend fun getUserWallpaperPurchases(userId: String): List<String> {
+        val snapshot = realtimeDb.child("users").child(userId).child("purchases").get().await()
+        return snapshot.children.mapNotNull { it.key }
+    }
+    // Marca el wallpaper como desbloqueado al superar un nivel
+    suspend fun unlockWallpaperForLevel(userId: String, levelName: String) {
+        val userRef = realtimeDb.child("users").child(userId).child("unlocked_wallpapers")
+        userRef.child(levelName).setValue(true).await()
+    }
+
+    suspend fun getAllWallpapers(): List<WallpaperItem> {
+        val db = FirebaseFirestore.getInstance()
+        val snapshot = db.collection("wallpapers").get().await()
+
+        return snapshot.documents.mapNotNull { doc ->
+            val filename = doc.getString("filename") ?: return@mapNotNull null
+            val url = doc.getString("url") ?: return@mapNotNull null
+            val price = doc.getLong("price")?.toInt() ?: 50
+            val difficulty = doc.getString("difficulty") ?: return@mapNotNull null
+
+            WallpaperItem(filename, url, difficulty, price)
+        }
+    }
+
+    // Devuelve la lista de wallpapers desbloqueados para ese usuario
+    suspend fun getUnlockedWallpapers(userId: String): List<String> {
+        val snapshot = realtimeDb.child("users").child(userId).child("unlocked_wallpapers").get().await()
+        return snapshot.children.mapNotNull { it.key }
+    }
+
+
     // PUNTOS
-    // ---------------------------
     suspend fun addPoints(pointsToAdd: Int) {
         val userId = auth.currentUser?.uid ?: return
-        val userRef = realtimeDb.child("users").child(userId)
+        val userRef = realtimeDb.child("users").child(userId).child("puntos")
+
         val snapshot = userRef.get().await()
-        val currentPoints = snapshot.child("points").getValue(Int::class.java) ?: 0
-        userRef.child("points").setValue(currentPoints + pointsToAdd).await()
+        val current = snapshot.getValue(PuntosUsuario::class.java) ?: PuntosUsuario()
+
+        val updated = PuntosUsuario(
+            total = current.total + pointsToAdd,
+            ultimaActualizacion = System.currentTimeMillis()
+        )
+
+        userRef.setValue(updated).await()
     }
 
     suspend fun spendPoints(pointsToSpend: Int) {
         val userId = auth.currentUser?.uid ?: return
-        val userRef = realtimeDb.child("users").child(userId)
-        val snapshot = userRef.get().await()
-        val currentPoints = snapshot.child("points").getValue(Int::class.java) ?: 0
+        val userRef = realtimeDb.child("users").child(userId).child("puntos")
 
-        if (currentPoints >= pointsToSpend) {
-            userRef.child("points").setValue(currentPoints - pointsToSpend).await()
+        val snapshot = userRef.get().await()
+        val current = snapshot.getValue(PuntosUsuario::class.java) ?: PuntosUsuario()
+
+        if (current.total >= pointsToSpend) {
+            val updated = current.copy(
+                total = current.total - pointsToSpend,
+                ultimaActualizacion = System.currentTimeMillis()
+            )
+            userRef.setValue(updated).await()
+        } else {
+            throw Exception("No tienes suficientes puntos")
         }
     }
 
     suspend fun getUserPoints(userId: String): Int {
-        val snapshot = realtimeDb.child("users").child(userId).child("points").get().await()
-        return snapshot.getValue(Int::class.java) ?: 0
+        val snapshot = realtimeDb.child("users").child(userId).child("puntos").get().await()
+        val puntos = snapshot.getValue(PuntosUsuario::class.java)
+        return puntos?.total ?: 0
     }
 
-    // ---------------------------
     // NIVEL
-    // ---------------------------
     suspend fun getUserLevel(userId: String): Int {
         val snapshot = realtimeDb.child("users").child(userId).child("highestLevelUnlocked").get().await()
         return snapshot.getValue(Int::class.java) ?: 1
@@ -169,76 +246,57 @@ class Repository {
         val current = getUserLevel(userId)
         saveUserLevel(userId, current + 1)
     }
+    suspend fun getOrderedLevelNames(): List<Triple<String, String, Int>> {
+        val snapshot = FirebaseFirestore.getInstance().collection("questions_by_level").get().await()
 
-    // ---------------------------
-    // REINTENTOS POR NIVEL
-    // ---------------------------
-    suspend fun hasUsedRetryForLevel(userId: String, level: Int): Boolean {
-        val snapshot = realtimeDb.child("users").child(userId).child("usedRetryPerLevel").child(level.toString()).get().await()
-        return snapshot.getValue(Boolean::class.java) ?: false
+        return snapshot.documents.mapNotNull { doc ->
+            val name = doc.id
+            val parts = name.split("_level")
+            if (parts.size == 2) {
+                val difficulty = parts[0]
+                val levelNumber = parts[1].toIntOrNull()
+                if (levelNumber != null) Triple(name, difficulty, levelNumber) else null
+            } else null
+        }.sortedWith(compareBy(
+            { when (it.second) {
+                "easy" -> 0
+                "medium" -> 1
+                "difficult" -> 2
+                else -> 3
+            }},
+            { it.third }
+        ))
     }
 
-    suspend fun markRetryUsed(userId: String, level: Int) {
-        realtimeDb.child("users").child(userId).child("usedRetryPerLevel").child(level.toString()).setValue(true).await()
-    }
-
-    // ---------------------------
-    // RACHA PERFECTA (opcional)
-    // ---------------------------
-    suspend fun getPerfectStreakCount(userId: String): Int {
-        val snapshot = realtimeDb.child("users").child(userId).child("perfectStreakCount").get().await()
-        return snapshot.getValue(Int::class.java) ?: 0
-    }
-
-    // ---------------------------
     // MULTIJUGADOR
-    // ---------------------------
     suspend fun createMatch(playerId: String): String {
         val matchId = realtimeDb.child("matches").push().key ?: return ""
-
-        val db = FirebaseFirestore.getInstance()
-        val snapshot = db.collection("questions_by_level").get().await()
-
-        val orderedDocs = snapshot.documents
-            .mapNotNull { doc ->
-                val name = doc.id
-                val parts = name.split("_level")
-                if (parts.size == 2) {
-                    val difficulty = parts[0]
-                    val levelNumber = parts[1].toIntOrNull()
-                    if (levelNumber != null) {
-                        Triple(name, difficulty, levelNumber)
-                    } else null
-                } else null
-            }
-            .sortedWith(compareBy<Triple<String, String, Int>>(
-                { when (it.second) {
-                    "easy" -> 0
-                    "medium" -> 1
-                    "difficult" -> 2
-                    else -> 3
-                }},
-                { it.third }
-            ))
-
-        val randomEntry = orderedDocs.randomOrNull() ?: return ""
-        val docName = randomEntry.first
-        val questions = getQuestionsByLevelIndex(orderedDocs.indexOf(randomEntry) + 1).shuffled().take(15)
 
         val match = Match(
             matchId = matchId,
             player1Id = playerId,
-            questions = questions,
+            questions = emptyList(),
             answered = mapOf(playerId to false),
             status = "waiting",
-            difficulty = randomEntry.second,
-            level = randomEntry.third
+            difficulty = "",
+            level = 1
         )
 
         realtimeDb.child("matches").child(matchId).setValue(match).await()
         return matchId
     }
 
+    fun observeMatch(matchId: String, onUpdate: (Match) -> Unit) {
+        val matchRef = realtimeDb.child("matches").child(matchId)
+        matchRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val match = snapshot.getValue(Match::class.java)
+                match?.let { onUpdate(it) }
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
 
     suspend fun joinMatch(playerId: String): String? {
         val matchesSnapshot = realtimeDb.child("matches").get().await()
@@ -260,17 +318,5 @@ class Repository {
         }
 
         return null
-    }
-
-    fun observeMatch(matchId: String, onUpdate: (Match) -> Unit) {
-        val matchRef = realtimeDb.child("matches").child(matchId)
-        matchRef.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
-            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
-                val match = snapshot.getValue(Match::class.java)
-                match?.let { onUpdate(it) }
-            }
-
-            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {}
-        })
     }
 }

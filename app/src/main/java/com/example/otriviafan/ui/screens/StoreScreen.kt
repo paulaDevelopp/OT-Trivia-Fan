@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -19,25 +20,21 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.otriviafan.viewmodel.StoreViewModel
+import com.example.otriviafan.viewmodel.UserViewModel
 import com.example.otriviafan.util.saveImageToGallery
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @Composable
-fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel) {
+fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, userViewModel: UserViewModel) {
     val context = LocalContext.current
-    val storeItems by storeViewModel.storeItems.collectAsState()
-    val userPurchases by storeViewModel.userPurchases.collectAsState()
-    val errorMessage by storeViewModel.error.collectAsState()
-    val successMessage by storeViewModel.successMessage.collectAsState()
-
-    val userId = FirebaseAuth.getInstance().currentUser?.uid
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        storeViewModel.loadStoreItems()
-        userId?.let { storeViewModel.loadUserPurchases(it) }
-    }
+    val availableWallpapers by userViewModel.availableWallpapers.collectAsState()
+    val unlockedWallpapers by userViewModel.unlockedWallpapers.collectAsState()
+    val purchasedWallpapers by userViewModel.purchasedWallpapers.collectAsState()
+    val userPoints by userViewModel.points.collectAsState()
+    val errorMessage by storeViewModel.error.collectAsState()
+    val successMessage by storeViewModel.successMessage.collectAsState()
 
     Column(
         modifier = Modifier
@@ -47,6 +44,15 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel) {
         Text(
             text = "Tienda de fondos de pantalla de OT",
             style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(bottom = 4.dp),
+            textAlign = TextAlign.Center
+        )
+
+        Text(
+            text = "Tus puntos: $userPoints",
+            style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(bottom = 16.dp),
@@ -59,7 +65,10 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            items(storeItems) { item ->
+            items(availableWallpapers) { item ->
+                val isUnlocked = unlockedWallpapers.contains(item.filename)
+                val isPurchased = purchasedWallpapers.contains(item.filename)
+
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -71,26 +80,27 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Image(
-                            painter = rememberAsyncImagePainter(item.imageUrl),
-                            contentDescription = item.name,
+                            painter = rememberAsyncImagePainter(item.url),
+                            contentDescription = item.filename,
                             modifier = Modifier
                                 .size(120.dp)
-                                .background(Color.LightGray),
+                                .background(Color.LightGray)
+                                .alpha(if (isUnlocked) 1f else 0.3f),
                             contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(item.name, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+                     //   Text(item.filename, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
 
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        if (userPurchases.contains(item.id)) {
+                        if (isPurchased) {
                             Button(
                                 onClick = {
                                     scope.launch {
                                         val success = saveImageToGallery(
                                             context = context,
-                                            imageUrl = item.imageUrl,
-                                            filename = item.name.replace(" ", "_")
+                                            imageUrl = item.url,
+                                            filename = item.filename
                                         )
                                         val message = if (success) "Guardado en galería 📷" else "Error al guardar"
                                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -104,8 +114,17 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel) {
                         } else {
                             Button(
                                 onClick = {
-                                    userId?.let { uid -> storeViewModel.buyItem(uid, item) }
+                                    userViewModel.buyWallpaper(
+                                        wallpaper = item,
+                                        onSuccess = {
+                                            storeViewModel.refreshUserPurchases()
+                                        },
+                                        onFailure = { e ->
+                                            storeViewModel.setError(e.message ?: "Error al comprar")
+                                        }
+                                    )
                                 },
+                                enabled = isUnlocked && userPoints >= item.price,
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E24AA))
                             ) {
