@@ -1,7 +1,7 @@
 package com.example.otriviafan.data
 
+import android.content.Context
 import com.example.otriviafan.data.entities.AnswerEntity
-import com.example.otriviafan.data.entities.StoreItem
 import com.example.otriviafan.data.model.Match
 import com.example.otriviafan.data.model.PuntosUsuario
 import com.example.otriviafan.data.model.QuestionWithAnswers
@@ -9,13 +9,42 @@ import com.example.otriviafan.data.model.WallpaperItem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.tasks.await
 
 class Repository {
 
     private val auth = FirebaseAuth.getInstance()
     private val realtimeDb = FirebaseDatabase.getInstance().reference
+    suspend fun getQuestionsForMultiplayerLevel(nivelId: Int): List<QuestionWithAnswers> {
+        val docName = "multiplayer_level$nivelId"
+        val doc = FirebaseFirestore.getInstance()
+            .collection("questions_by_level")
+            .document(docName)
+            .get()
+            .await()
 
+        val questionsList = doc.get("questions") as? List<Map<String, Any>> ?: return emptyList()
+
+        return questionsList.map { questionMap ->
+            val questionText = questionMap["questionText"] as? String ?: ""
+            val correctAnswerId = (questionMap["correctAnswerId"] as? Number)?.toInt() ?: 0
+            val answers = (questionMap["answers"] as? List<Map<String, Any>>)?.map { ans ->
+                AnswerEntity(
+                    id = (ans["id"] as? Number)?.toInt() ?: 0,
+                    questionId = (ans["questionId"] as? Number)?.toInt() ?: 0,
+                    answerText = ans["answerText"] as? String ?: ""
+                )
+            } ?: emptyList()
+
+            QuestionWithAnswers(
+                questionText = questionText,
+                correctAnswerId = correctAnswerId,
+                answers = answers
+            )
+        }
+    }
     // USUARIO
     suspend fun initializeNewUser(userId: String, email: String) {
         val userRef = realtimeDb.child("users").child(userId)
@@ -93,7 +122,7 @@ class Repository {
         userRef.child("points").setValue(0).await()
     }
 
-    suspend fun loadUserPurchases(userId: String): List<String> {
+  /*  suspend fun loadUserPurchases(userId: String): List<String> {
         val snapshot = realtimeDb.child("users").child(userId).child("purchases").get().await()
         return snapshot.children.mapNotNull { it.key }
     }
@@ -102,7 +131,7 @@ class Repository {
         val snapshot = realtimeDb.child("store_items").get().await()
         return snapshot.children.mapNotNull { it.getValue(StoreItem::class.java)?.copy(id = it.key ?: "") }
     }
-
+*/
     suspend fun buyItem(userId: String, itemId: String, price: Int) {
         val userRef = realtimeDb.child("users").child(userId)
         val snapshot = userRef.get().await()
@@ -267,15 +296,90 @@ class Repository {
             { it.third }
         ))
     }
+    suspend fun marcarNivelCompletado(userId: String, nivelId: Int, tipo: String) {
+        val ref = realtimeDb
+            .child("users")
+            .child(userId)
+            .child("nivel_progreso")
+            .child(nivelId.toString())
+
+        val progreso = mapOf(
+            "completado" to true,
+            "tipo" to tipo
+        )
+
+        ref.setValue(progreso).await()
+    }
+    suspend fun getNivelProgreso(userId: String): Map<Int, com.example.otriviafan.viewmodel.UserViewModel.NivelProgreso> {
+        val snapshot = FirebaseDatabase.getInstance()
+            .reference
+            .child("users")
+            .child(userId)
+            .child("nivel_progreso")
+            .get()
+            .await()
+
+        val result = mutableMapOf<Int, com.example.otriviafan.viewmodel.UserViewModel.NivelProgreso>()
+        for (nivel in snapshot.children) {
+            val id = nivel.key?.toIntOrNull() ?: continue
+            val completado = nivel.child("completado").getValue(Boolean::class.java) ?: false
+            val tipo = nivel.child("tipo").getValue(String::class.java) ?: "individual"
+            result[id] = com.example.otriviafan.viewmodel.UserViewModel.NivelProgreso(completado, tipo)
+        }
+        return result
+    }
+    suspend fun isMultiplayerRequiredForLevel(docName: String): Boolean {
+        val doc = FirebaseFirestore.getInstance()
+            .collection("questions_by_level")
+            .document(docName)
+            .get()
+            .await()
+
+        return doc.getBoolean("requiresMultiplayerWin") ?: false
+    }
+
+    // MULTIJUGADOR: Leer preguntas desde assets
+    suspend fun getRandomQuestionsFromFirestore(): List<QuestionWithAnswers> {
+        val db = FirebaseFirestore.getInstance()
+        val snapshot = db.collection("questions_by_level").get().await()
+
+        val documents = snapshot.documents
+        if (documents.isEmpty()) return emptyList()
+
+        val randomDoc = documents.random()
+        val questionsList = randomDoc.get("questions") as? List<Map<String, Any>> ?: return emptyList()
+
+        return questionsList.map { questionMap ->
+            val questionText = questionMap["questionText"] as? String ?: ""
+            val correctAnswerId = (questionMap["correctAnswerId"] as? Number)?.toInt() ?: 0
+            val answers = (questionMap["answers"] as? List<Map<String, Any>>)?.map { ans ->
+                AnswerEntity(
+                    id = (ans["id"] as? Number)?.toInt() ?: 0,
+                    questionId = (ans["questionId"] as? Number)?.toInt() ?: 0,
+                    answerText = ans["answerText"] as? String ?: ""
+                )
+            } ?: emptyList()
+
+            QuestionWithAnswers(
+                questionText = questionText,
+                correctAnswerId = correctAnswerId,
+                answers = answers
+            )
+        }
+    }
+
+
+
+    // Resto del código sin cambios...
 
     // MULTIJUGADOR
-    suspend fun createMatch(playerId: String): String {
+    suspend fun createMatchWithQuestions(playerId: String, questions: List<QuestionWithAnswers>): String {
         val matchId = realtimeDb.child("matches").push().key ?: return ""
 
         val match = Match(
             matchId = matchId,
             player1Id = playerId,
-            questions = emptyList(),
+            questions = questions,
             answered = mapOf(playerId to false),
             status = "waiting",
             difficulty = "",
@@ -298,7 +402,7 @@ class Repository {
         })
     }
 
-    suspend fun joinMatch(playerId: String): String? {
+    suspend fun joinOrCreateMatch(playerId: String, context: Context): String {
         val matchesSnapshot = realtimeDb.child("matches").get().await()
 
         for (matchSnap in matchesSnapshot.children) {
@@ -317,6 +421,10 @@ class Repository {
             }
         }
 
-        return null
+        // Si no hay partidas disponibles, crear una nueva con preguntas aleatorias
+        val questions = getRandomQuestionsFromFirestore()
+        return createMatchWithQuestions(playerId, questions)
     }
+
+
 }

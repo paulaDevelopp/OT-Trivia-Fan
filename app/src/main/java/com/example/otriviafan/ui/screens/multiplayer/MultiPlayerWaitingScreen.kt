@@ -21,8 +21,9 @@ fun MultiPlayerWaitingScreen(
     val context = LocalContext.current
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
+    // ✅ Crear partida con preguntas aleatorias
     LaunchedEffect(Unit) {
-        matchViewModel.createMatch(uid)
+        matchViewModel.createMatch(uid, context)
     }
 
     Column(
@@ -40,12 +41,15 @@ fun MultiPlayerWaitingScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        if (match?.status == "active") {
-            // Ya hay un segundo jugador, se puede empezar
-            LaunchedEffect(match.status) {
-                navController.navigate(Screen.MultiPlayerGame.route)
+        LaunchedEffect(match?.status, match?.questions) {
+            if (match?.status == "active" && match.questions.isNotEmpty()) {
+                navController.navigate(Screen.MultiPlayerGame.route) {
+                    popUpTo(Screen.MultiPlayerWaiting.route) { inclusive = true }
+                }
             }
         }
+
+
 
         CircularProgressIndicator()
     }

@@ -1,6 +1,6 @@
-
 package com.example.otriviafan.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.otriviafan.data.Repository
@@ -16,36 +16,37 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class MatchViewModel(private val repository: Repository) : ViewModel() {
+
     private val _match = MutableStateFlow<Match?>(null)
     val match: StateFlow<Match?> = _match
 
-    //crear la partida
-    fun createMatch(playerId: String) {
+    // Crear partida con preguntas aleatorias
+    fun createMatch(playerId: String, context: Context) {
         viewModelScope.launch {
             try {
-                val matchId = repository.createMatch(playerId)
+                val questions = repository.getRandomQuestionsFromFirestore()
+                val matchId = repository.createMatchWithQuestions(playerId, questions)
                 repository.observeMatch(matchId) { updatedMatch ->
                     _match.value = updatedMatch
                 }
             } catch (e: Exception) {
-                e.printStackTrace() // MOSTRARÁ EL ERROR EN EL LOG
+                e.printStackTrace()
             }
         }
     }
 
-    //unirse a la partida
-    fun joinMatch(playerId: String) {
+    // Unirse a partida existente
+    fun joinMatch(playerId: String, context: Context) {
         viewModelScope.launch {
-            val matchId = repository.joinMatch(playerId)
-            matchId?.let {
-                repository.observeMatch(it) { updatedMatch ->
-                    _match.value = updatedMatch
-                }
+            val matchId = repository.joinOrCreateMatch(playerId, context)
+            repository.observeMatch(matchId) { updatedMatch ->
+                _match.value = updatedMatch
             }
         }
     }
 
-    //responder
+
+    // Enviar respuesta
     fun sendAnswer(answerId: Int) {
         val currentMatch = match.value ?: return
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
@@ -60,10 +61,8 @@ class MatchViewModel(private val repository: Repository) : ViewModel() {
             override fun doTransaction(currentData: MutableData): Transaction.Result {
                 val match = currentData.getValue(Match::class.java) ?: return Transaction.success(currentData)
 
-                // Si ya respondió, salir
                 if (match.answered[uid] == true) return Transaction.success(currentData)
 
-                // Si acierta y no hay ganador todavía
                 var newWinner = match.currentWinner
                 var p1Score = match.player1Score
                 var p2Score = match.player2Score
@@ -87,15 +86,11 @@ class MatchViewModel(private val repository: Repository) : ViewModel() {
                 return Transaction.success(currentData)
             }
 
-            override fun onComplete(
-                error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?
-            ) {
-                // Nada extra por ahora, se reflejará vía observeMatch()
-            }
+            override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {}
         })
     }
 
-    //avanzar pregunta
+    // Pasar a la siguiente pregunta
     fun nextQuestion() {
         val currentMatch = match.value ?: return
 
@@ -107,14 +102,12 @@ class MatchViewModel(private val repository: Repository) : ViewModel() {
             override fun doTransaction(currentData: MutableData): Transaction.Result {
                 val match = currentData.getValue(Match::class.java) ?: return Transaction.success(currentData)
 
-                // Ya en la última pregunta
                 if (match.currentQuestionIndex >= match.questions.size - 1) {
                     val finishedMatch = match.copy(status = "finished")
                     currentData.value = finishedMatch
                     return Transaction.success(currentData)
                 }
 
-                // Avanzar a la siguiente pregunta
                 val nextIndex = match.currentQuestionIndex + 1
                 val newAnswered = match.answered.mapValues { false }
 
@@ -128,12 +121,7 @@ class MatchViewModel(private val repository: Repository) : ViewModel() {
                 return Transaction.success(currentData)
             }
 
-            override fun onComplete(
-                error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?
-            ) {
-                // Se actualizará automáticamente por observeMatch()
-            }
+            override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {}
         })
     }
-
 }

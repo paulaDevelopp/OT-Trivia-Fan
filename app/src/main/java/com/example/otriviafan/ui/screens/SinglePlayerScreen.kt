@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.otriviafan.R
+import com.example.otriviafan.data.Repository
 import com.example.otriviafan.data.api.RetrofitClient
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.ui.components.ConfettiAnimation
@@ -31,13 +32,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
-
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
 @Composable
 fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
+    // ViewModels: uno para el juego y otro para datos de usuario
     val viewModel: LevelGameViewModel = viewModel(factory = LevelGameViewModel.Factory(nivelSeleccionado))
     val userViewModel: UserViewModel = viewModel()
 
+    // Observadores de estado del ViewModel
     val questions by viewModel.questions.collectAsState()
     val currentQuestionIndex by viewModel.currentQuestionIndex.collectAsState()
     val score by viewModel.score.collectAsState()
@@ -49,21 +51,25 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
     val nivelSubido by viewModel.nivelSubido.collectAsState()
     val shouldRefresh by viewModel.userDataShouldRefresh.collectAsState()
 
-    val scope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope() // Scope para corrutinas dentro de la UI
 
-    var selectedAnswerId by remember { mutableStateOf<Int?>(null) }
-    var showConfetti by remember { mutableStateOf(false) }
-    var canRetry by remember { mutableStateOf(false) }
+    var selectedAnswerId by remember { mutableStateOf<Int?>(null) } // Para marcar la respuesta elegida
+    var showConfetti by remember { mutableStateOf(false) }           // Controla si mostrar la animación
+    var canRetry by remember { mutableStateOf(false) }               // Habilita reintento si se acaban vidas
+    val repository = Repository()
 
+    // Cargar preguntas al entrar
     LaunchedEffect(Unit) {
         viewModel.loadQuestions()
     }
+
     val context = LocalContext.current
 
+    // Verifica si el siguiente nivel ya está en Firebase; si no, lo sube desde assets
     LaunchedEffect(nivelSeleccionado) {
         val siguienteNivel = nivelSeleccionado + 1
         if (siguienteNivel <= 10) {
-            val yaExiste = nivelYaExisteEnFirebase(siguienteNivel)
+           /*val yaExiste = nivelYaExisteEnFirebase(siguienteNivel)
             if (!yaExiste) {
                 val archivoUsado = subirPreguntasNivelDesdeAssets(context, siguienteNivel)
                 println("Nivel $siguienteNivel subido a Firebase desde $archivoUsado")
@@ -75,10 +81,7 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
                     else -> "unknown"
                 }
 
-                // Aquí puedes hacer lo que necesites con la dificultad:
-                println("Dificultad detectada: $dificultad")
-
-                // Ejemplo: subir wallpapers, llamar a API, etc.
+                // Subida de wallpapers (u otras tareas asociadas) por nivel y dificultad
                 scope.launch {
                     withContext(Dispatchers.IO) {
                         val url = URL("https://tu-api.com/upload_wallpapers?difficulty=$dificultad")
@@ -89,17 +92,18 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
                 }
             } else {
                 println("ℹNivel $siguienteNivel ya existe.")
-            }
+            }*/
         }
-
     }
 
+    // Verifica si se puede reintentar al quedarse sin vidas
     LaunchedEffect(outOfLives) {
         if (outOfLives) {
             canRetry = viewModel.canRetryWithPoints()
         }
     }
 
+    // Refresca los datos del usuario tras completar nivel o usar puntos
     LaunchedEffect(shouldRefresh) {
         if (shouldRefresh) {
             userViewModel.refreshUserData()
@@ -107,6 +111,7 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
         }
     }
 
+    // Diálogo para reintentar si el jugador pierde
     if (outOfLives) {
         OutOfLivesDialog(
             onRetry = {
@@ -122,6 +127,7 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
         )
     }
 
+    // Alerta cuando el jugador hace una partida perfecta
     if (partidaPerfecta) {
         AlertDialog(
             onDismissRequest = {},
@@ -135,6 +141,7 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
         )
     }
 
+    // Diálogo y animación cuando el jugador sube de nivel
     if (nivelSubido) {
         showConfetti = true
 
@@ -147,7 +154,7 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
             else -> "unknown"
         }
 
-        // Subida de wallpapers desde Android al superar un nivel
+        // Sube los wallpapers correspondientes al nivel
         scope.launch {
             try {
                 val response = RetrofitClient.instance.uploadWallpapers(dificultad)
@@ -161,7 +168,7 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
             }
         }
 
-
+        // Alerta de subida de nivel
         AlertDialog(
             onDismissRequest = {},
             title = { Text("¡Subiste de Nivel!") },
@@ -169,8 +176,8 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.clearFeedbackFlags()
-                    navController.navigate(Screen.LevelSelect.route) {
-                        popUpTo(Screen.LevelSelect.route) { inclusive = true }
+                    navController.navigate(Screen.LevelMap.route) {
+                        popUpTo(Screen.LevelMap.route) { inclusive = true }
                         launchSingleTop = true
                     }
                 }) {
@@ -178,10 +185,14 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
                 }
             }
         )
+        scope.launch {
+            val userId = userViewModel.getUserId() // asegúrate de tener esta función en el ViewModel
+            repository.marcarNivelCompletado(userId, nivelSeleccionado, "individual")
+        }
+
     }
 
-
-
+    // Capa visual con fondo, animación y contenido de preguntas
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.ot_sinlogo),
@@ -195,18 +206,21 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
                 .background(Color.Black.copy(alpha = 0.4f))
         )
 
+        // Animación de confeti cuando hay acierto
         if (showConfetti) {
             ConfettiAnimation(trigger = true) {
                 showConfetti = false
             }
         }
 
+        // Contenido de la pantalla: puntuación, nivel, preguntas y respuestas
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Header: puntuación y nivel
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -223,6 +237,7 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Mostrar la pregunta actual y sus respuestas
             if (questions.isNotEmpty() && currentQuestionIndex < questions.size) {
                 val question = questions[currentQuestionIndex]
 
@@ -242,6 +257,7 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Botones de respuestas
                 question.answers.forEach { answer ->
                     val isSelected = selectedAnswerId == answer.id
                     Button(
@@ -267,7 +283,7 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(16.dp),
-                        enabled = selectedAnswerId == null
+                        enabled = selectedAnswerId == null // Deshabilita mientras responde
                     ) {
                         Text(answer.answerText)
                     }

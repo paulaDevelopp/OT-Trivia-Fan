@@ -26,35 +26,23 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
     private val _vidas = MutableStateFlow(3)
     val vidas: StateFlow<Int> = _vidas
 
-    private val _nivelActual = MutableStateFlow(1)
-    val nivelActual: StateFlow<Int> = _nivelActual
-
-    private val _aciertosEnEsteNivel = MutableStateFlow(0)
-    val aciertosEnEsteNivel: StateFlow<Int> = _aciertosEnEsteNivel
-
-    private val _fallosConsecutivos = MutableStateFlow(0)
-    val fallosConsecutivos: StateFlow<Int> = _fallosConsecutivos
+    private val _vidasAgotadas = MutableStateFlow(false)
+    val vidasAgotadas: StateFlow<Boolean> = _vidasAgotadas
 
     private val _nivelSuperado = MutableStateFlow(false)
     val nivelSuperado: StateFlow<Boolean> = _nivelSuperado
 
-    private val _vidasAgotadas = MutableStateFlow(false)
-    val vidasAgotadas: StateFlow<Boolean> = _vidasAgotadas
+    private val _fallosConsecutivos = MutableStateFlow(0)
 
+    private val numeroPreguntas = 5
     private var usadoReintentar = false
-    var puntosJugador = 0
-
     private val usedQuestionIds = mutableSetOf<Int>()
 
-    val numeroPreguntas = 5;
-
     fun iniciarNivel(nivel: Int) {
-        _nivelActual.value = nivel
         _vidas.value = 3
         _score.value = 0
-        _aciertosEnEsteNivel.value = 0
-        _fallosConsecutivos.value = 0
         _currentQuestionIndex.value = 0
+        _fallosConsecutivos.value = 0
         _nivelSuperado.value = false
         _vidasAgotadas.value = false
         usadoReintentar = false
@@ -62,12 +50,12 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
 
         viewModelScope.launch {
             val firebaseQuestions = repository.getQuestionsByLevelIndex(nivel)
-
                 .filterNot { it.id in usedQuestionIds }
                 .shuffled()
-                .take(numeroPreguntas) //preguntas por nivel
+                .take(numeroPreguntas)
 
             _questions.value = firebaseQuestions
+            usedQuestionIds.addAll(firebaseQuestions.map { it.id }) // ✅ Evitar repeticiones
             if (firebaseQuestions.isNotEmpty()) {
                 _answers.value = firebaseQuestions[0].answers.shuffled()
             }
@@ -79,7 +67,6 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
 
         if (correcta) {
             _score.value += 1
-            _aciertosEnEsteNivel.value += 1
             _fallosConsecutivos.value = 0
         } else {
             _fallosConsecutivos.value += 1
@@ -92,7 +79,7 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
             }
         }
 
-        if (_aciertosEnEsteNivel.value >= numeroPreguntas) {
+        if (_score.value >= numeroPreguntas) {
             _nivelSuperado.value = true
         }
     }
@@ -104,16 +91,18 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
-    fun puedeReintentar(): Boolean {
-        return puntosJugador >= 20 && !usadoReintentar
+    fun puedeReintentar(puntosUsuario: Int): Boolean {
+        return puntosUsuario >= 20 && !usadoReintentar
     }
 
-    fun reintentarNivel() {
-        if (puedeReintentar()) {
-            puntosJugador -= 20
+    fun reintentarNivel(puntosUsuario: Int): Int {
+        return if (puedeReintentar(puntosUsuario)) {
             _vidas.value = 3
             _vidasAgotadas.value = false
             usadoReintentar = true
+            puntosUsuario - 20 // devuelve los puntos actualizados
+        } else {
+            puntosUsuario
         }
     }
 }

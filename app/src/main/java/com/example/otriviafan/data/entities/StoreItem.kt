@@ -1,9 +1,11 @@
 package com.example.otriviafan.data.entities
 
-data class StoreItem(
+/*data class StoreItem(
     val id: String = "",
     val name: String = "",
-    val price: Int = 0,
     val imageUrl: String = "",
-    val requiredLevel: Int = 1
+    val price: Int = 50,
+    val difficulty: String = "", // "easy", "medium", "difficult"
+    val level: Int = 1           // nivel relativo dentro de esa dificultad
 )
+*/

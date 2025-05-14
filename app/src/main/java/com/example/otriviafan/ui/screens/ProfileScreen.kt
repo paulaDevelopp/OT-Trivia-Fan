@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.otriviafan.R
-import com.example.otriviafan.data.entities.StoreItem
+//import com.example.otriviafan.data.entities.StoreItem
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.viewmodel.UserViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,7 +40,11 @@ fun ProfileScreen(navController: NavHostController) {
     val highestLevelUnlocked by viewModel.highestLevelUnlocked.collectAsState()
 
     var email by remember { mutableStateOf("") }
-    var backgrounds by remember { mutableStateOf<List<StoreItem>>(emptyList()) }
+    val purchasedWallpapers by viewModel.purchasedWallpapers.collectAsState()
+    val availableWallpapers by viewModel.availableWallpapers.collectAsState()
+    val unlockedWallpapers by viewModel.unlockedWallpapers.collectAsState()
+
+    val purchasedImages = availableWallpapers.filter { purchasedWallpapers.contains(it.filename) || unlockedWallpapers.contains(it.filename) }
 
     LaunchedEffect(uid) {
         uid?.let {
@@ -56,10 +60,10 @@ fun ProfileScreen(navController: NavHostController) {
                 val purchasedIds = purchasesSnap.children.mapNotNull { it.key }
 
                 val storeSnap = storeRef.get().await()
-                val allItems = storeSnap.children.mapNotNull { it.getValue(StoreItem::class.java) }
+                //  val allItems = storeSnap.children.mapNotNull { it.getValue(StoreItem::class.java) }
 
                 // Ya no filtramos por "type"
-                backgrounds = allItems.filter { purchasedIds.contains(it.id) }
+              //  backgrounds = allItems.filter { purchasedIds.contains(it.id) }
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -118,16 +122,18 @@ fun ProfileScreen(navController: NavHostController) {
 
                 Text("🖼️ Fondos Canjeados", style = MaterialTheme.typography.titleMedium, color = Color.White)
                 LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.height(150.dp)) {
-                    items(backgrounds) { bg ->
+                    items(purchasedImages) { bg ->
                         Image(
-                            painter = rememberAsyncImagePainter(bg.imageUrl),
-                            contentDescription = bg.name,
+                            painter = rememberAsyncImagePainter(bg.url),
+                            contentDescription = bg.filename,
                             modifier = Modifier
                                 .size(140.dp)
-                                .padding(4.dp)
+                                .padding(4.dp),
+                            contentScale = ContentScale.Crop
                         )
                     }
                 }
+
             }
         }
     }

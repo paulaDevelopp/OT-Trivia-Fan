@@ -1,56 +1,63 @@
 package com.example.otriviafan.ui.screens.multiplayer
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.otriviafan.data.Repository
+import com.example.otriviafan.data.model.Match
 import com.example.otriviafan.navigation.Screen
-import com.example.otriviafan.viewmodel.MatchViewModel
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
-fun MultiPlayerGameScreen(
-    navController: NavController,
-    matchViewModel: MatchViewModel
-) {
-    val match = matchViewModel.match.collectAsState().value
+fun MultiPlayerGameScreen(navController: NavController, nivelId: Int) {
+    val repository = Repository()
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-    val currentMatch = match ?: return
 
-    val questionIndex = currentMatch.currentQuestionIndex
-    val question = currentMatch.questions.getOrNull(questionIndex)
-    if (match.status == "finished") {
-        LaunchedEffect(Unit) {
-            navController.navigate(Screen.MultiPlayerResult.route) {
-                popUpTo(Screen.MultiPlayerGame.route) { inclusive = true }
+    var match by remember { mutableStateOf<Match?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var gameOver by remember { mutableStateOf(false) }
+    var youWon by remember { mutableStateOf<Boolean?>(null) }
+
+    LaunchedEffect(Unit) {
+        try {
+            // Cargar preguntas del nivel multijugador correspondiente
+            val questions = repository.getQuestionsForMultiplayerLevel(nivelId)
+
+            // Crear match con esas preguntas
+            val matchId = repository.createMatchWithQuestions(userId, questions)
+
+            // Observar partida
+            repository.observeMatch(matchId) { updated ->
+                match = updated
+
+                val bothAnswered = updated.answered.values.all { it }
+                if (bothAnswered && !gameOver) {
+                    gameOver = true
+                    val winner = when {
+                        updated.player1Score > updated.player2Score -> updated.player1Id
+                        updated.player2Score > updated.player1Score -> updated.player2Id
+                        else -> null
+                    }
+
+                    youWon = winner == userId
+
+                    if (youWon == true) {
+                        scope.launch {
+                            repository.marcarNivelCompletado(userId, nivelId, "multijugador")
+                        }
+                    }
+                }
             }
-        }
-    }
-    if (question == null) {
-        Text("No hay preguntas disponibles.")
-        return
-    }
-
-    val alreadyAnswered = currentMatch.answered[userId] == true
-    val answeredAll = currentMatch.answered.values.all { it }
-    val youAreWinner = currentMatch.currentWinner == userId
-
-    // Estado para controlar si mostramos el resultado temporalmente
-    var showResult by remember { mutableStateOf(false) }
-
-    // Si todos respondieron y no estamos mostrando resultado aún
-    LaunchedEffect(answeredAll) {
-        if (answeredAll && !showResult) {
-            showResult = true
-            delay(1500) // ⏳ Esperamos 1.5 segundos
-            matchViewModel.nextQuestion()
-            showResult = false
+        } catch (e: Exception) {
+            error = e.message
         }
     }
 
@@ -58,64 +65,31 @@ fun MultiPlayerGameScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Barra de progreso
-        LinearProgressIndicator(
-            progress = (questionIndex + 1) / currentMatch.questions.size.toFloat(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .background(Color.LightGray)
-        )
+        Text("Modo multijugador", style = MaterialTheme.typography.headlineMedium)
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text("Pregunta ${questionIndex + 1} de ${currentMatch.questions.size}", style = MaterialTheme.typography.titleMedium)
-
-        Text(text = question.questionText, style = MaterialTheme.typography.headlineSmall)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        question.answers.shuffled().forEach { answer ->
-            Button(
-                onClick = {
-                    if (!alreadyAnswered) {
-                        matchViewModel.sendAnswer(answer.id)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !alreadyAnswered
-            ) {
-                Text(answer.answerText)
+        if (gameOver && youWon != null) {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                if (youWon == true) "¡Ganaste!" else "Has perdido esta vez...",
+                style = MaterialTheme.typography.headlineLarge
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(onClick = {
+                navController.navigate(Screen.LevelMap.route) {
+                    popUpTo(Screen.LevelMap.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }) {
+                Text("Volver al mapa")
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (showResult && currentMatch.currentWinner != null) {
-            if (youAreWinner) {
-                Text(
-                    "¡Ganaste esta pregunta! 🎉",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            } else {
-                Text(
-                    "El otro jugador respondió primero 😢",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            }
-        } else if (alreadyAnswered && !answeredAll) {
-            Text("Esperando al otro jugador...", style = MaterialTheme.typography.bodyMedium)
+        error?.let {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Error: $it", color = MaterialTheme.colorScheme.error)
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text("Marcador", style = MaterialTheme.typography.titleMedium)
-        Text("Tú: ${if (userId == currentMatch.player1Id) currentMatch.player1Score else currentMatch.player2Score}")
-        Text("Oponente: ${if (userId == currentMatch.player1Id) currentMatch.player2Score else currentMatch.player1Score}")
     }
 }

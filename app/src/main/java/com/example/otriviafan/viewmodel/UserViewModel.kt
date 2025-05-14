@@ -8,12 +8,14 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class UserViewModel : ViewModel() {
 
     private val repository = Repository()
     private val auth = FirebaseAuth.getInstance()
 
+    // Estado de puntos y wallpapers
     private val _highestLevelUnlocked = MutableStateFlow(1)
     val highestLevelUnlocked: StateFlow<Int> = _highestLevelUnlocked
 
@@ -45,7 +47,6 @@ class UserViewModel : ViewModel() {
     }
 
     fun refreshUserData() = loadDataIfLoggedIn()
-
     fun refreshLevel() = loadDataIfLoggedIn()
 
     fun reloadWallpapers() {
@@ -57,7 +58,11 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun buyWallpaper(wallpaper: WallpaperItem, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    fun buyWallpaper(
+        wallpaper: WallpaperItem,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
         val userId = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             try {
@@ -92,4 +97,14 @@ class UserViewModel : ViewModel() {
             ?.groupValues?.get(1)
             ?.toIntOrNull() ?: Int.MAX_VALUE
     }
+
+    suspend fun getNivelProgreso(userId: String): Map<Int, NivelProgreso> {
+        return repository.getNivelProgreso(userId)
+    }
+
+
+    // ✅ Devuelve el ID del usuario actual
+    fun getUserId(): String = auth.currentUser?.uid.orEmpty()
+
+    data class NivelProgreso(val completado: Boolean = false, val tipo: String = "individual")
 }

@@ -15,6 +15,11 @@ class LevelGameViewModel(
     private val selectedLevel: Int
 ) : ViewModel() {
 
+    // Configuración básica
+    private val numeroPreguntas = 5
+    private val puntosPorPregunta = 2
+
+    // Estado general del juego
     private val _questions = MutableStateFlow<List<QuestionWithAnswers>>(emptyList())
     val questions: StateFlow<List<QuestionWithAnswers>> = _questions
 
@@ -27,15 +32,18 @@ class LevelGameViewModel(
     private val _lives = MutableStateFlow(3)
     val lives: StateFlow<Int> = _lives
 
+    // Estados del progreso del nivel
     private val _levelCompleted = MutableStateFlow(false)
     val levelCompleted: StateFlow<Boolean> = _levelCompleted
 
     private val _outOfLives = MutableStateFlow(false)
     val outOfLives: StateFlow<Boolean> = _outOfLives
 
+    // Datos de usuario (como racha perfecta)
     private val _perfectStreak = MutableStateFlow(0)
     val perfectStreak: StateFlow<Int> = _perfectStreak
 
+    // Feedback visual al jugador
     private val _partidaPerfecta = MutableStateFlow(false)
     val partidaPerfecta: StateFlow<Boolean> = _partidaPerfecta
 
@@ -48,38 +56,54 @@ class LevelGameViewModel(
     private val _userDataShouldRefresh = MutableStateFlow(false)
     val userDataShouldRefresh: StateFlow<Boolean> = _userDataShouldRefresh
 
-    private var partidaInvalida = false
+    // Control de lógica de partida
+    private var usadoReintento = false
+    private var huboError = false
+    private val usedQuestionIds = mutableSetOf<Int>() // IDs ya usados en esta partida
 
+    // Cargar las preguntas de Firebase (filtrando las ya usadas)
     fun loadQuestions() {
         viewModelScope.launch {
             val allQuestions = repository.getQuestionsByLevelIndex(selectedLevel)
-            _questions.value = allQuestions.shuffled().take(15)
+
+            if (allQuestions.isEmpty()) {
+                // Si no hay preguntas en Firestore para este nivel
+                _questions.value = emptyList()
+                _outOfLives.value = true // Esto activará un mensaje en la UI (por ejemplo: "nivel no disponible")
+                return@launch
+            }
+
+            val preguntasNoRepetidas = allQuestions.filterNot { usedQuestionIds.contains(it.id) }
+
+            val seleccionadas = preguntasNoRepetidas.shuffled().take(numeroPreguntas)
+            _questions.value = seleccionadas
+            usedQuestionIds.addAll(seleccionadas.map { it.id })
+
+            // Reinicio del estado del juego
             _currentQuestionIndex.value = 0
             _score.value = 0
-            _lives.value = 3
+            _lives.value = 1
             _outOfLives.value = false
             _levelCompleted.value = false
-            partidaInvalida = false
-            val userId = FirebaseAuth.getInstance().currentUser?.uid
-            if (userId != null) {
-                _perfectStreak.value = repository.getPerfectStreakCount(userId)
-            }
+            usadoReintento = false
+            huboError = false
         }
     }
 
 
+    // Enviar respuesta y actualizar estado del juego
     fun submitAnswer(isCorrect: Boolean) {
         viewModelScope.launch {
             if (isCorrect) {
-                _score.value += 1
+                _score.value += puntosPorPregunta
             } else {
                 _lives.value -= 1
-                partidaInvalida = true
+                huboError = true
             }
 
             if (_lives.value <= 0) {
                 _outOfLives.value = true
-            } else if (_currentQuestionIndex.value + 1 >= 15) {
+            } else if (_currentQuestionIndex.value + 1 >= numeroPreguntas) {
                 finishLevel()
             } else {
                 _currentQuestionIndex.value += 1
@@ -87,66 +111,85 @@ class LevelGameViewModel(
         }
     }
 
+    // Lógica de finalización del nivel
     fun finishLevel() {
         viewModelScope.launch {
             val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
-            val subeNivel = _score.value == 15 && _lives.value > 0
 
-            val highestUnlocked = repository.getUserLevel(userId)
-            if (subeNivel && selectedLevel == highestUnlocked) {
-                repository.incrementUserLevel(userId)
-                _nivelSubido.value = true
-                if (selectedLevel == 1) {
-                    _mostrarSubidaDeNivelDesdeNivel1.value = true
-                }
-            }
+            val hizoPartidaPerfecta = _score.value == (numeroPreguntas * puntosPorPregunta) && !huboError && _lives.value > 0
+            val falloPeroUsoReintentoYSeRecupero = _score.value == (numeroPreguntas * puntosPorPregunta) && huboError && usadoReintento && _lives.value > 0
 
-            if (_lives.value > 0) {
+            if (hizoPartidaPerfecta || falloPeroUsoReintentoYSeRecupero) {
                 repository.addPoints(_score.value)
-            }
+                if (hizoPartidaPerfecta) {
+                    _partidaPerfecta.value = true
+                }
 
-            if (!subeNivel) {
+                val highestUnlocked = repository.getUserLevel(userId)
+                if (selectedLevel == highestUnlocked) {
+                    repository.incrementUserLevel(userId)
+                    _nivelSubido.value = true
+                    if (selectedLevel == 1) {
+                        _mostrarSubidaDeNivelDesdeNivel1.value = true
+                    }
+
+                    // Desbloquear wallpaper asociado
+                    val orderedDocs = repository.getOrderedLevelNames()
+                    val levelName = orderedDocs.getOrNull(selectedLevel - 1)?.first
+                    if (levelName != null) {
+                        repository.unlockWallpaperForLevel(userId, levelName)
+                    }
+                }
+
+            } else {
+                // Guarda el nivel actual aunque no haya sido perfecto
                 repository.saveUserLevel(userId, selectedLevel)
             }
 
+            // Refrescar datos de usuario y cerrar la partida
             _userDataShouldRefresh.value = true
             _levelCompleted.value = true
+            usedQuestionIds.clear() // Reinicio para permitir nueva partida limpia
         }
     }
 
+    // Reintento usando puntos del usuario (solo una vez)
     suspend fun retryUsingPoints(): Boolean {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return false
-        if (repository.hasUsedRetryForLevel(userId, selectedLevel)) return false
+        if (usadoReintento) return false
         val points = repository.getUserPoints(userId)
 
         return if (points >= 20) {
             repository.spendPoints(20)
-            repository.markRetryUsed(userId, selectedLevel)
             _lives.value = 1
             _outOfLives.value = false
+            usadoReintento = true
             true
         } else {
             false
         }
     }
 
+    // Verifica si se puede reintentar (por puntos y si ya se usó)
     suspend fun canRetryWithPoints(): Boolean {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return false
-        val hasUsed = repository.hasUsedRetryForLevel(userId, selectedLevel)
         val points = repository.getUserPoints(userId)
-        return !hasUsed && points >= 20
+        return !usadoReintento && points >= 20
     }
 
+    // Limpia indicadores de feedback tras confirmación del usuario
     fun clearFeedbackFlags() {
         _partidaPerfecta.value = false
         _nivelSubido.value = false
         _mostrarSubidaDeNivelDesdeNivel1.value = false
     }
 
+    // Marca los datos como actualizados para evitar recarga innecesaria
     fun setRefreshHandled() {
         _userDataShouldRefresh.value = false
     }
 
+    // Fábrica para inyectar el nivel seleccionado
     companion object {
         fun Factory(selectedLevel: Int) = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -154,6 +197,4 @@ class LevelGameViewModel(
             }
         }
     }
-
-
 }

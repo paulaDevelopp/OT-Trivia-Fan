@@ -26,7 +26,8 @@ fun MultiPlayerJoinScreen(
 
     LaunchedEffect(joining) {
         if (joining) {
-            matchViewModel.joinMatch(uid)
+            matchViewModel.joinMatch(uid, context)
+
         }
     }
 
@@ -49,11 +50,12 @@ fun MultiPlayerJoinScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        if (joining && match?.status == "active") {
-            LaunchedEffect(match.status) {
+        if (joining && match?.status == "active" && match.questions.isNotEmpty()) {
+            LaunchedEffect(match.matchId) {
                 navController.navigate(Screen.MultiPlayerGame.route)
             }
         }
+
 
         if (joining) {
             CircularProgressIndicator()

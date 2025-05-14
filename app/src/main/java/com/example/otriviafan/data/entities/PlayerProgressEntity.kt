@@ -1,9 +1,10 @@
 package com.example.otriviafan.data.entities
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity
 data class PlayerProgressEntity(
-    val id: Int = 0, // no se necesita si usás Firebase push(), podés quitarlo si querés
-    val userId: String = "",
-    val questionId: Int = 0,
-    val correct: Boolean = false,
-    val timestamp: Long = System.currentTimeMillis()
+    @PrimaryKey val userId: String,
+    val nivelesCompletados: List<Int>
 )

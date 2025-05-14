@@ -87,15 +87,15 @@ fun HomeScreen(navController: NavController) {
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
+
                 Button(
-                    onClick = { navController.navigate(Screen.LevelSelect.route) },
+                    onClick = { navController.navigate(Screen.LevelMap.route) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E24AA))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784))
                 ) {
-                    Text(text = "🎯 Modo Individual", color = Color.White)
+                    Text(text = "🎯 Jugar en el mapa de niveles", color = Color.White)
                 }
-
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -103,9 +103,9 @@ fun HomeScreen(navController: NavController) {
                     onClick = { navController.navigate(Screen.MultiPlayerEntry.route) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3949AB))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6))
                 ) {
-                    Text(text = "⚡ Modo Multijugador", color = Color.White)
+                    Text(text = "⚡ Multijugador clásico", color = Color.White)
                 }
             }
         }
