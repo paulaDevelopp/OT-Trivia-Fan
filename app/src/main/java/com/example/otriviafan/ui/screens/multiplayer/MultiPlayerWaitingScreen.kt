@@ -15,15 +15,17 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun MultiPlayerWaitingScreen(
     navController: NavController,
-    matchViewModel: MatchViewModel
+    matchViewModel: MatchViewModel,
+    nivelId: Int
 ) {
     val match = matchViewModel.match.collectAsState().value
     val context = LocalContext.current
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-    // ✅ Crear partida con preguntas aleatorias
+    // Crear partida con preguntas aleatorias
     LaunchedEffect(Unit) {
-        matchViewModel.createMatch(uid, context)
+        matchViewModel.createMatch(uid, context, nivelId)
+
     }
 
     Column(

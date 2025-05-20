@@ -7,7 +7,6 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
-    object Profile : Screen("profile")
 
     // Juego individual desde el mapa
     object SinglePlayer : Screen("single_player")
@@ -22,11 +21,14 @@ sealed class Screen(val route: String) {
     // Tienda
     object Store : Screen("store")
 
+    // Perfil
+    object Profile : Screen("profile")
+
     // Mapa de niveles unificado
     object LevelMap : Screen("level_map")
 
     // Ruta para nivel multijugador nuevo con ID (ya está en MainActivity)
-    object MultiPlayerGameWithId {
+    object MultiPlayerGameWithId : Screen("multiplayer_game_screen") {
         fun createRoute(nivelId: Int) = "multiplayer_game_screen/$nivelId"
     }
 }

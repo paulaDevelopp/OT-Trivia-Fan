@@ -9,13 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-
 class UserViewModel : ViewModel() {
 
     private val repository = Repository()
     private val auth = FirebaseAuth.getInstance()
 
-    // Estado de puntos y wallpapers
     private val _highestLevelUnlocked = MutableStateFlow(1)
     val highestLevelUnlocked: StateFlow<Int> = _highestLevelUnlocked
 
@@ -32,52 +30,23 @@ class UserViewModel : ViewModel() {
     val unlockedWallpapers: StateFlow<List<String>> = _unlockedWallpapers
 
     init {
-        loadDataIfLoggedIn()
+        auth.currentUser?.uid?.let { loadUserDataFor(it) }
     }
 
-    private fun loadDataIfLoggedIn() {
-        val userId = auth.currentUser?.uid ?: return
+    fun loadUserDataFor(uid: String) {
         viewModelScope.launch {
-            _highestLevelUnlocked.value = repository.getUserLevel(userId)
-            _points.value = repository.getUserPoints(userId)
-            _purchasedWallpapers.value = repository.getUserWallpaperPurchases(userId)
-            _unlockedWallpapers.value = repository.getUnlockedWallpapers(userId)
-            _availableWallpapers.value = loadAndSortWallpapers()
+            _highestLevelUnlocked.value = repository.getUserLevel(uid)
+            _points.value = repository.getUserPoints(uid)
+            _purchasedWallpapers.value = repository.getUserWallpaperPurchases(uid)
+            _unlockedWallpapers.value = repository.getUnlockedWallpapers(uid)
+            _availableWallpapers.value = loadAndSortWallpapersFor(uid)
         }
     }
 
-    fun refreshUserData() = loadDataIfLoggedIn()
-    fun refreshLevel() = loadDataIfLoggedIn()
-
-    fun reloadWallpapers() {
-        val userId = auth.currentUser?.uid ?: return
-        viewModelScope.launch {
-            _purchasedWallpapers.value = repository.getUserWallpaperPurchases(userId)
-            _unlockedWallpapers.value = repository.getUnlockedWallpapers(userId)
-            _availableWallpapers.value = loadAndSortWallpapers()
-        }
-    }
-
-    fun buyWallpaper(
-        wallpaper: WallpaperItem,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        val userId = auth.currentUser?.uid ?: return
-        viewModelScope.launch {
-            try {
-                repository.buyWallpaper(userId, wallpaper)
-                _points.value = repository.getUserPoints(userId)
-                _purchasedWallpapers.value = repository.getUserWallpaperPurchases(userId)
-                onSuccess()
-            } catch (e: Exception) {
-                onFailure(e)
-            }
-        }
-    }
-
-    private suspend fun loadAndSortWallpapers(): List<WallpaperItem> {
+    private suspend fun loadAndSortWallpapersFor(uid: String): List<WallpaperItem> {
+        val userLevel = repository.getUserLevel(uid)
         val allWallpapers = repository.getAllWallpapers()
+
         return allWallpapers.sortedWith(
             compareBy(
                 { when (it.difficulty) {
@@ -98,13 +67,64 @@ class UserViewModel : ViewModel() {
             ?.toIntOrNull() ?: Int.MAX_VALUE
     }
 
+    fun refreshUserData() {
+        auth.currentUser?.uid?.let { loadUserDataFor(it) }
+    }
+
+    fun reloadWallpapers() {
+        auth.currentUser?.uid?.let { uid ->
+            viewModelScope.launch {
+                _purchasedWallpapers.value = repository.getUserWallpaperPurchases(uid)
+                _unlockedWallpapers.value = repository.getUnlockedWallpapers(uid)
+                _availableWallpapers.value = loadAndSortWallpapersFor(uid)
+            }
+        }
+    }
+
+    fun buyWallpaper(wallpaper: WallpaperItem, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            try {
+                repository.buyWallpaper(uid, wallpaper)
+                _points.value = repository.getUserPoints(uid)
+                _purchasedWallpapers.value = repository.getUserWallpaperPurchases(uid)
+                onSuccess()
+            } catch (e: Exception) {
+                onFailure(e)
+            }
+        }
+    }
+
     suspend fun getNivelProgreso(userId: String): Map<Int, NivelProgreso> {
         return repository.getNivelProgreso(userId)
     }
 
+    fun gastarPuntos(cantidad: Int, onComplete: () -> Unit = {}, onError: (Exception) -> Unit = {}) {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            try {
+                repository.spendPoints(cantidad)
+                _points.value = repository.getUserPoints(uid)
+                onComplete()
+            } catch (e: Exception) {
+                onError(e)
+            }
+        }
+    }
 
-    // ✅ Devuelve el ID del usuario actual
+    fun marcarNivelComoCompletado(nivelId: Int, tipo: String) {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            repository.marcarNivelCompletado(uid, nivelId, tipo)
+            _unlockedWallpapers.value = repository.getUnlockedWallpapers(uid)
+            _availableWallpapers.value = loadAndSortWallpapersFor(uid)
+        }
+    }
+
     fun getUserId(): String = auth.currentUser?.uid.orEmpty()
 
-    data class NivelProgreso(val completado: Boolean = false, val tipo: String = "individual")
+    data class NivelProgreso(
+        val completado: Boolean = false,
+        val tipo: String = "individual"
+    )
 }

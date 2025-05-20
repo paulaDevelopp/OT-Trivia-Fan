@@ -8,7 +8,6 @@ import com.example.otriviafan.data.model.QuestionWithAnswers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
 class GameViewModel(private val repository: Repository) : ViewModel() {
 
     private val _questions = MutableStateFlow<List<QuestionWithAnswers>>(emptyList())
@@ -23,7 +22,7 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score
 
-    private val _vidas = MutableStateFlow(3)
+    private val _vidas = MutableStateFlow(1) // Solo una vida permitida
     val vidas: StateFlow<Int> = _vidas
 
     private val _vidasAgotadas = MutableStateFlow(false)
@@ -32,20 +31,19 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
     private val _nivelSuperado = MutableStateFlow(false)
     val nivelSuperado: StateFlow<Boolean> = _nivelSuperado
 
-    private val _fallosConsecutivos = MutableStateFlow(0)
-
     private val numeroPreguntas = 5
-    private var usadoReintentar = false
+    private var vidaUsada = false
+    private var falloYaCometido = false
     private val usedQuestionIds = mutableSetOf<Int>()
 
     fun iniciarNivel(nivel: Int) {
-        _vidas.value = 3
+        _vidas.value = 1
         _score.value = 0
         _currentQuestionIndex.value = 0
-        _fallosConsecutivos.value = 0
         _nivelSuperado.value = false
         _vidasAgotadas.value = false
-        usadoReintentar = false
+        vidaUsada = false
+        falloYaCometido = false
         usedQuestionIds.clear()
 
         viewModelScope.launch {
@@ -55,7 +53,8 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
                 .take(numeroPreguntas)
 
             _questions.value = firebaseQuestions
-            usedQuestionIds.addAll(firebaseQuestions.map { it.id }) // ✅ Evitar repeticiones
+            usedQuestionIds.addAll(firebaseQuestions.map { it.id })
+
             if (firebaseQuestions.isNotEmpty()) {
                 _answers.value = firebaseQuestions[0].answers.shuffled()
             }
@@ -66,43 +65,39 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
         val correcta = questions.value[currentQuestionIndex.value].correctAnswerId == answer.id
 
         if (correcta) {
-            _score.value += 1
-            _fallosConsecutivos.value = 0
+            _score.value += 4
         } else {
-            _fallosConsecutivos.value += 1
-            if (_fallosConsecutivos.value == 2) {
-                _vidas.value = (_vidas.value - 1).coerceAtLeast(0)
-                _fallosConsecutivos.value = 0
-                if (_vidas.value == 0) {
+            if (!falloYaCometido) {
+                // Primera vez que falla
+                if (_score.value >= 20 && !vidaUsada) {
+                    _score.value -= 20
+                    vidaUsada = true
+                    // Se cancela el fallo, puede continuar
+                } else {
+                    falloYaCometido = true
+                    _vidas.value = 0
                     _vidasAgotadas.value = true
+                    return
                 }
+            } else {
+                // Ya falló antes, se termina
+                _vidas.value = 0
+                _vidasAgotadas.value = true
+                return
             }
         }
 
-        if (_score.value >= numeroPreguntas) {
-            _nivelSuperado.value = true
-        }
-    }
-
-    fun siguientePregunta() {
-        _currentQuestionIndex.value += 1
-        if (_currentQuestionIndex.value < _questions.value.size) {
-            _answers.value = _questions.value[_currentQuestionIndex.value].answers.shuffled()
-        }
-    }
-
-    fun puedeReintentar(puntosUsuario: Int): Boolean {
-        return puntosUsuario >= 20 && !usadoReintentar
-    }
-
-    fun reintentarNivel(puntosUsuario: Int): Int {
-        return if (puedeReintentar(puntosUsuario)) {
-            _vidas.value = 3
-            _vidasAgotadas.value = false
-            usadoReintentar = true
-            puntosUsuario - 20 // devuelve los puntos actualizados
+        // Avanzar
+        if (_currentQuestionIndex.value + 1 < questions.value.size) {
+            _currentQuestionIndex.value += 1
+            _answers.value = questions.value[_currentQuestionIndex.value].answers.shuffled()
         } else {
-            puntosUsuario
+            // Terminó el nivel
+            if (!falloYaCometido || vidaUsada) {
+                _nivelSuperado.value = true
+            }
         }
     }
+
+
 }

@@ -15,7 +15,8 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun MultiPlayerJoinScreen(
     navController: NavController,
-    matchViewModel: MatchViewModel
+    matchViewModel: MatchViewModel,
+    nivelId: Int
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -26,7 +27,7 @@ fun MultiPlayerJoinScreen(
 
     LaunchedEffect(joining) {
         if (joining) {
-            matchViewModel.joinMatch(uid, context)
+            matchViewModel.joinMatch(uid, context, nivelId)
 
         }
     }
@@ -50,11 +51,14 @@ fun MultiPlayerJoinScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        if (joining && match?.status == "active" && match.questions.isNotEmpty()) {
-            LaunchedEffect(match.matchId) {
-                navController.navigate(Screen.MultiPlayerGame.route)
+        LaunchedEffect(match?.status, match?.questions) {
+            if (joining && match?.status == "active" && match.questions.isNotEmpty()) {
+                navController.navigate(Screen.MultiPlayerGame.route) {
+                    popUpTo(Screen.MultiPlayerJoin.route) { inclusive = true }
+                }
             }
         }
+
 
 
         if (joining) {

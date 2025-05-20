@@ -10,16 +10,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.otriviafan.R
 import com.example.otriviafan.data.Repository
 import com.example.otriviafan.navigation.Screen
+import com.example.otriviafan.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
@@ -29,7 +32,7 @@ import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
     val repository = remember { Repository() }
@@ -52,13 +55,30 @@ fun LoginScreen(navController: NavController) {
         )
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             TopAppBar(
-                title = { Text("INICIO DE SESIÓN", color = Color.White) },
-                modifier = Modifier.fillMaxWidth(),
+                title = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "I N I C I O    D E    S E S I Ó N",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF6A1B9A),
+                    containerColor = Color(0xFF1A237E),
                     titleContentColor = Color.White
                 )
             )
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -68,42 +88,67 @@ fun LoginScreen(navController: NavController) {
                 Spacer(modifier = Modifier.weight(2f))
                 Spacer(modifier = Modifier.height(32.dp))
 
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email", color = Color.White) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.White,
-                        unfocusedBorderColor = Color.White,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                        .shadow(elevation = 10.dp, shape = RoundedCornerShape(12.dp), ambientColor = Color(0xFF82B1FF))
+                ) {
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email", color = Color.White) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Transparent),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF2979FF),
+                            unfocusedBorderColor = Color(0xFF2979FF),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.White,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        )
                     )
-                )
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Contraseña", color = Color.White) },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.White,
-                        unfocusedBorderColor = Color.White,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                        .shadow(elevation = 10.dp, shape = RoundedCornerShape(12.dp), ambientColor = Color(0xFF82B1FF))
+                ) {
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Contraseña", color = Color.White) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Transparent),
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF2979FF),
+                            unfocusedBorderColor = Color(0xFF2979FF),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.White,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        )
                     )
-                )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
-
                 Button(
-                    onClick = {
-                        isLoading = true
+                    onClick = { isLoading = true
                         auth.signInWithEmailAndPassword(email, password)
                             .addOnCompleteListener { task ->
                                 isLoading = false
@@ -130,6 +175,8 @@ fun LoginScreen(navController: NavController) {
                                             }
 
                                             repository.assignInitialItemsIfNeeded(userId)
+                                            userViewModel.loadUserDataFor(userId)
+
                                         }
                                     }
 
@@ -142,13 +189,13 @@ fun LoginScreen(navController: NavController) {
                     enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .height(52.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF8E24AA),
+                        containerColor = Color(0xFF2979FF),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = ButtonDefaults.buttonElevation(8.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = ButtonDefaults.buttonElevation(6.dp)
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
@@ -160,9 +207,8 @@ fun LoginScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
-                    Text("¿No tienes cuenta? Crea una cuenta", color = Color.White)
+                    Text("¿No tienes cuenta aún? Regístrate", color = Color.White)
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
             }
         }

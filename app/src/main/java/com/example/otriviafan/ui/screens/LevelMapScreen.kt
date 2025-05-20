@@ -15,6 +15,13 @@ import com.example.otriviafan.data.Repository
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.DpOffset
+import com.example.otriviafan.R
 
 enum class TipoNivel { INDIVIDUAL, MULTIJUGADOR }
 
@@ -28,7 +35,6 @@ data class NivelUI(
 @Composable
 fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
     val scope = rememberCoroutineScope()
-    val repository = remember { Repository() }
     var niveles by remember { mutableStateOf<List<NivelUI>>(emptyList()) }
 
     LaunchedEffect(Unit) {
@@ -36,26 +42,14 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
             val userId = userViewModel.getUserId()
             val progreso = userViewModel.getNivelProgreso(userId)
 
-            niveles = (1..20).map { id ->
-                val tipo = if (id % 4 == 0) TipoNivel.MULTIJUGADOR else TipoNivel.INDIVIDUAL
+            // Solo 10 niveles
+            niveles = (1..10).map { id ->
+                val tipo = if (isMultiplayerLevel(id)) TipoNivel.MULTIJUGADOR else TipoNivel.INDIVIDUAL
                 val completado = progreso[id]?.completado == true
-
-                val docName = nombreDocDelNivel(id)
-                val requiresMultiplayer = if (tipo == TipoNivel.INDIVIDUAL) {
-                    repository.isMultiplayerRequiredForLevel(docName)
-                } else false
-
-                val desbloqueado = when {
-                    id == 1 -> true
-                    tipo == TipoNivel.INDIVIDUAL -> {
-                        val prevCompleted = progreso[id - 1]?.completado == true
-                        val multijugadorPrevioGanado = progreso[id - 1]?.tipo == "multijugador" && progreso[id - 1]?.completado == true
-                        (!requiresMultiplayer && prevCompleted) || (requiresMultiplayer && multijugadorPrevioGanado)
-                    }
-                    tipo == TipoNivel.MULTIJUGADOR -> (id - 1 downTo id - 3).all { progreso[it]?.completado == true }
-                    else -> false
+                val desbloqueado = when (id) {
+                    1 -> true
+                    else -> progreso[id - 1]?.completado == true
                 }
-
                 NivelUI(id, tipo, desbloqueado, completado)
             }
         }
@@ -64,59 +58,60 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .verticalScroll(rememberScrollState())
     ) {
-        Text("Mapa de niveles", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
+        Box(modifier = Modifier.height(1500.dp)) {
+            Image(
+                painter = painterResource(id = R.drawable.fondo_niveles),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.fillMaxSize()
+            )
 
-        niveles.chunked(4).forEach { fila ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                fila.forEach { nivel ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(
-                            modifier = Modifier
-                                .size(60.dp)
-                                .background(
-                                    when {
-                                        nivel.tipo == TipoNivel.MULTIJUGADOR -> if (nivel.completado) Color(0xFF1976D2) else if (nivel.desbloqueado) Color(0xFF64B5F6) else Color.LightGray
-                                        else -> if (nivel.completado) Color(0xFF388E3C) else if (nivel.desbloqueado) Color(0xFF81C784) else Color.Gray
-                                    },
-                                    shape = CircleShape
-                                )
-                                .clickable(enabled = nivel.desbloqueado) {
-                                    val route = if (nivel.tipo == TipoNivel.INDIVIDUAL)
-                                        "${Screen.SinglePlayer.route}/${nivel.id}"
-                                    else
-                                        "multiplayer_game_screen/${nivel.id}"
-                                    navController.navigate(route)
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(nivel.id.toString(), style = MaterialTheme.typography.titleMedium, color = Color.White)
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = if (nivel.tipo == TipoNivel.MULTIJUGADOR) "🧑‍🤝‍🧑" else "🎯",
-                            style = MaterialTheme.typography.bodySmall
+            val posiciones = listOf(
+                DpOffset(100.dp, 80.dp),
+                DpOffset(200.dp, 180.dp),
+                DpOffset(80.dp, 280.dp),
+                DpOffset(220.dp, 400.dp),
+                DpOffset(110.dp, 500.dp),
+                DpOffset(180.dp, 620.dp),
+                DpOffset(100.dp, 720.dp),
+                DpOffset(190.dp, 850.dp),
+                DpOffset(130.dp, 960.dp),
+                DpOffset(160.dp, 1080.dp)
+            )
+
+            niveles.forEachIndexed { index, nivel ->
+                val puedeJugar = nivel.desbloqueado && !nivel.completado
+
+                Box(
+                    modifier = Modifier
+                        .offset(x = posiciones[index].x, y = posiciones[index].y)
+                        .size(60.dp)
+                        .background(
+                            color = when {
+                                nivel.tipo == TipoNivel.MULTIJUGADOR -> if (nivel.completado) Color(0xFF1976D2) else if (nivel.desbloqueado) Color(0xFF64B5F6) else Color.LightGray
+                                else -> if (nivel.completado) Color(0xFF388E3C) else if (nivel.desbloqueado) Color(0xFF81C784) else Color.Gray
+                            },
+                            shape = CircleShape
                         )
-                    }
+                        .clickable(enabled = puedeJugar) {
+                            val route = if (nivel.tipo == TipoNivel.MULTIJUGADOR) {
+                                "multiplayer_entry/${nivel.id}"
+                            } else {
+                                "${Screen.SinglePlayer.route}/${nivel.id}"
+                            }
+                            navController.navigate(route)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(nivel.id.toString(), color = Color.White)
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
-fun nombreDocDelNivel(id: Int): String {
-    return when (id) {
-        in 1..3 -> "easy_level$id"
-        in 4..6 -> "medium_level${id - 3}"
-        in 7..9 -> "difficult_level${id - 6}"
-        in 10..20 -> "difficult_level${id - 6}"
-        else -> "easy_level1"
-    }
+fun isMultiplayerLevel(id: Int): Boolean {
+    return id % 4 == 0
 }

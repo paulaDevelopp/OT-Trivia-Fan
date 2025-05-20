@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.otriviafan.data.Repository
 import com.example.otriviafan.data.model.QuestionWithAnswers
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -29,7 +30,7 @@ class LevelGameViewModel(
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score
 
-    private val _lives = MutableStateFlow(3)
+    private val _lives = MutableStateFlow(1)
     val lives: StateFlow<Int> = _lives
 
     // Estados del progreso del nivel
@@ -38,6 +39,9 @@ class LevelGameViewModel(
 
     private val _outOfLives = MutableStateFlow(false)
     val outOfLives: StateFlow<Boolean> = _outOfLives
+
+    private val _visibleLives = MutableStateFlow(1)
+    val visibleLives: StateFlow<Int> = _visibleLives
 
     // Datos de usuario (como racha perfecta)
     private val _perfectStreak = MutableStateFlow(0)
@@ -119,41 +123,47 @@ class LevelGameViewModel(
             val hizoPartidaPerfecta = _score.value == (numeroPreguntas * puntosPorPregunta) && !huboError && _lives.value > 0
             val falloPeroUsoReintentoYSeRecupero = _score.value == (numeroPreguntas * puntosPorPregunta) && huboError && usadoReintento && _lives.value > 0
 
+            val esMultijugador = repository.esNivelMultijugador(selectedLevel)
+
             if (hizoPartidaPerfecta || falloPeroUsoReintentoYSeRecupero) {
                 repository.addPoints(_score.value)
+
                 if (hizoPartidaPerfecta) {
                     _partidaPerfecta.value = true
                 }
 
-                val highestUnlocked = repository.getUserLevel(userId)
-                if (selectedLevel == highestUnlocked) {
-                    repository.incrementUserLevel(userId)
-                    _nivelSubido.value = true
-                    if (selectedLevel == 1) {
-                        _mostrarSubidaDeNivelDesdeNivel1.value = true
-                    }
+                if (!esMultijugador) {
+                    val highestUnlocked = repository.getUserLevel(userId)
+                    if (selectedLevel == highestUnlocked) {
+                        repository.incrementUserLevel(userId)
+                        _nivelSubido.value = true
+                        if (selectedLevel == 1) {
+                            _mostrarSubidaDeNivelDesdeNivel1.value = true
+                        }
 
-                    // Desbloquear wallpaper asociado
-                    val orderedDocs = repository.getOrderedLevelNames()
-                    val levelName = orderedDocs.getOrNull(selectedLevel - 1)?.first
-                    if (levelName != null) {
-                        repository.unlockWallpaperForLevel(userId, levelName)
+                        // Desbloquear wallpaper asociado
+                        val orderedDocs = repository.getOrderedLevelNames()
+                        val levelName = orderedDocs.getOrNull(selectedLevel - 1)?.second
+                        if (levelName != null) {
+                            repository.unlockWallpaperForLevel(userId, levelName)
+                        }
                     }
                 }
 
-            } else {
-                // Guarda el nivel actual aunque no haya sido perfecto
+            } else if (!esMultijugador) {
+                // Guarda el nivel actual solo si no es multijugador
                 repository.saveUserLevel(userId, selectedLevel)
             }
 
             // Refrescar datos de usuario y cerrar la partida
             _userDataShouldRefresh.value = true
             _levelCompleted.value = true
-            usedQuestionIds.clear() // Reinicio para permitir nueva partida limpia
+            usedQuestionIds.clear()
         }
     }
 
-    // Reintento usando puntos del usuario (solo una vez)
+
+    // Reintento usando 20 puntos del usuario (solo una vez)
     suspend fun retryUsingPoints(): Boolean {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return false
         if (usadoReintento) return false
@@ -161,14 +171,21 @@ class LevelGameViewModel(
 
         return if (points >= 20) {
             repository.spendPoints(20)
-            _lives.value = 1
-            _outOfLives.value = false
             usadoReintento = true
+
+            //  Vida lógica para poder seguir jugando
+            _lives.value = 1
+
+            // Vida visible ya no muestra nada
+            _visibleLives.value = 0
+
+            _outOfLives.value = false
             true
         } else {
             false
         }
     }
+
 
     // Verifica si se puede reintentar (por puntos y si ya se usó)
     suspend fun canRetryWithPoints(): Boolean {
@@ -187,6 +204,9 @@ class LevelGameViewModel(
     // Marca los datos como actualizados para evitar recarga innecesaria
     fun setRefreshHandled() {
         _userDataShouldRefresh.value = false
+    }
+    fun setLives(value: Int) {
+        _lives.value = value
     }
 
     // Fábrica para inyectar el nivel seleccionado

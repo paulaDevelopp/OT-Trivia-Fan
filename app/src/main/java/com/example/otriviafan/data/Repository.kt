@@ -18,7 +18,7 @@ class Repository {
     private val auth = FirebaseAuth.getInstance()
     private val realtimeDb = FirebaseDatabase.getInstance().reference
     suspend fun getQuestionsForMultiplayerLevel(nivelId: Int): List<QuestionWithAnswers> {
-        val docName = "multiplayer_level$nivelId"
+        val docName = getMultiplayerDocName(nivelId)
         val doc = FirebaseFirestore.getInstance()
             .collection("questions_by_level")
             .document(docName)
@@ -30,6 +30,8 @@ class Repository {
         return questionsList.map { questionMap ->
             val questionText = questionMap["questionText"] as? String ?: ""
             val correctAnswerId = (questionMap["correctAnswerId"] as? Number)?.toInt() ?: 0
+            val questionId = (questionMap["questionId"] as? Number)?.toInt() ?: 0
+
             val answers = (questionMap["answers"] as? List<Map<String, Any>>)?.map { ans ->
                 AnswerEntity(
                     id = (ans["id"] as? Number)?.toInt() ?: 0,
@@ -39,12 +41,23 @@ class Repository {
             } ?: emptyList()
 
             QuestionWithAnswers(
+                id = questionId,
                 questionText = questionText,
                 correctAnswerId = correctAnswerId,
-                answers = answers
+                answers = answers,
+                imageUrl = questionMap["imageUrl"] as? String ?: ""
             )
+
         }
     }
+    private fun getMultiplayerDocName(nivelId: Int): String {
+        return when (nivelId) {
+            4 -> "multiplayer_level1"
+            7 -> "multiplayer_level2"
+            else -> "multiplayer_level1" // Fallback por si algo sale mal
+        }
+    }
+
     // USUARIO
     suspend fun initializeNewUser(userId: String, email: String) {
         val userRef = realtimeDb.child("users").child(userId)
@@ -62,35 +75,22 @@ class Repository {
 
     // PREGUNTAS
     suspend fun getQuestionsByLevelIndex(index: Int): List<QuestionWithAnswers> {
-        val db = FirebaseFirestore.getInstance()
-        val snapshot = db.collection("questions_by_level").get().await()
+        val levelNames = getOrderedLevelNames()
+        val docName = levelNames.find { it.first == index }?.second ?: return emptyList()
 
-        val orderedDocs = snapshot.documents.mapNotNull { doc ->
-            val name = doc.id
-            val parts = name.split("_level")
-            if (parts.size == 2) {
-                val difficulty = parts[0]
-                val levelNumber = parts[1].toIntOrNull()
-                if (levelNumber != null) Triple(name, difficulty, levelNumber) else null
-            } else null
-        }.sortedWith(compareBy<Triple<String, String, Int>>(
-            { when (it.second) {
-                "easy" -> 0
-                "medium" -> 1
-                "difficult" -> 2
-                else -> 3
-            } },
-            { it.third }
-        ))
-
-        val docName = orderedDocs.getOrNull(index - 1)?.first ?: return emptyList()
-        val doc = db.collection("questions_by_level").document(docName).get().await()
+        val doc = FirebaseFirestore.getInstance()
+            .collection("questions_by_level")
+            .document(docName)
+            .get()
+            .await()
 
         val questionsList = doc.get("questions") as? List<Map<String, Any>> ?: return emptyList()
 
         return questionsList.map { questionMap ->
             val questionText = questionMap["questionText"] as? String ?: ""
             val correctAnswerId = (questionMap["correctAnswerId"] as? Number)?.toInt() ?: 0
+            val questionId = (questionMap["questionId"] as? Number)?.toInt() ?: 0
+
             val answers = (questionMap["answers"] as? List<Map<String, Any>>)?.map { ans ->
                 AnswerEntity(
                     id = (ans["id"] as? Number)?.toInt() ?: 0,
@@ -100,12 +100,14 @@ class Repository {
             } ?: emptyList()
 
             QuestionWithAnswers(
+                id = questionId,
                 questionText = questionText,
-                answers = answers,
-                correctAnswerId = correctAnswerId
+                correctAnswerId = correctAnswerId,
+                answers = answers
             )
         }
     }
+
 
     // TIENDA
     suspend fun assignInitialItemsIfNeeded(userId: String) {
@@ -149,28 +151,27 @@ class Repository {
     suspend fun getAvailableWallpapersForUserLevel(userLevel: Int): List<WallpaperItem> {
         val db = FirebaseFirestore.getInstance()
 
-        val difficulties = when {
-            userLevel <= 4 -> listOf("easy")
-            userLevel <= 8 -> listOf("easy", "medium")
-            else -> listOf("easy", "medium", "difficult")
-        }
+        // Solo cuenta niveles completados que no sean multiplayer
+        val nivelReal = (1..userLevel).count { !esNivelMultijugador(it) }
 
-        val wallpapers = mutableListOf<WallpaperItem>()
-        for (difficulty in difficulties) {
-            val snapshot = db.collection("wallpapers")
-                .whereEqualTo("difficulty", difficulty)
-                .get().await()
+        val snapshot = db.collection("wallpapers").get().await()
 
-            wallpapers.addAll(snapshot.documents.mapNotNull { doc ->
-                val filename = doc.getString("filename") ?: return@mapNotNull null
-                val url = doc.getString("url") ?: return@mapNotNull null
-                val price = doc.getLong("price")?.toInt() ?: 50
+        return snapshot.documents.mapNotNull { doc ->
+            val filename = doc.getString("filename") ?: return@mapNotNull null
+            val url = doc.getString("url") ?: return@mapNotNull null
+            val price = doc.getLong("price")?.toInt() ?: 50
+            val difficulty = doc.getString("difficulty") ?: return@mapNotNull null
+            val minLevel = doc.getLong("level")?.toInt() ?: 1
 
-                WallpaperItem(filename, url, difficulty, price)
-            })
-        }
+            WallpaperItem(filename, url, difficulty, price, minLevel)
+        }.filter { it.minLevel <= nivelReal }
+    }
 
-        return wallpapers
+    // Mueve esta función fuera (puede estar en el Repository o como extensión)
+    suspend fun esNivelMultijugador(nivelId: Int): Boolean {
+        val levelNames = getOrderedLevelNames() // asegúrate de cachearlo si es necesario
+        val docName = levelNames.find { it.first == nivelId }?.second ?: return false
+        return docName.startsWith("multiplayer")
     }
 
     suspend fun buyWallpaper(userId: String, wallpaper: WallpaperItem) {
@@ -275,16 +276,19 @@ class Repository {
         val current = getUserLevel(userId)
         saveUserLevel(userId, current + 1)
     }
-    suspend fun getOrderedLevelNames(): List<Triple<String, String, Int>> {
+    suspend fun getOrderedLevelNames(): List<Pair<Int, String>> {
         val snapshot = FirebaseFirestore.getInstance().collection("questions_by_level").get().await()
 
-        return snapshot.documents.mapNotNull { doc ->
-            val name = doc.id
-            val parts = name.split("_level")
-            if (parts.size == 2) {
-                val difficulty = parts[0]
-                val levelNumber = parts[1].toIntOrNull()
-                if (levelNumber != null) Triple(name, difficulty, levelNumber) else null
+        val ordered = snapshot.documents.mapNotNull { doc ->
+            val id = doc.id
+            if (id.startsWith("multiplayer")) return@mapNotNull null // ❌ Salta multijugador
+
+            val match = Regex("""(easy|medium|difficult)_level(\d+)""").find(id)
+            val difficulty = match?.groupValues?.get(1)
+            val level = match?.groupValues?.get(2)?.toIntOrNull()
+
+            if (difficulty != null && level != null) {
+                Triple(id, difficulty, level)
             } else null
         }.sortedWith(compareBy(
             { when (it.second) {
@@ -295,7 +299,10 @@ class Repository {
             }},
             { it.third }
         ))
+
+        return ordered.mapIndexed { index, triple -> (index + 1) to triple.first }
     }
+
     suspend fun marcarNivelCompletado(userId: String, nivelId: Int, tipo: String) {
         val ref = realtimeDb
             .child("users")
@@ -309,7 +316,41 @@ class Repository {
         )
 
         ref.setValue(progreso).await()
+
+        // Evitar desbloquear wallpapers si el nivel es multijugador
+        if (esNivelMultijugador(nivelId)) return
+
+        //  Desbloquear solo si es nivel individual
+        val levelNames = getOrderedLevelNames() // List<Pair<Int, String>>
+        val nivelName = levelNames.find { it.first == nivelId }?.second
+
+        val wallpapers = getAllWallpapers()
+        val matchingWallpaper = nivelName?.let { name ->
+            wallpapers.find { it.filename == name }
+        }
+
+        matchingWallpaper?.let {
+            unlockWallpaperForLevel(userId, it.filename)
+        }
     }
+
+
+    suspend fun verificarNivelCompletado(userId: String, nivelId: Int, tipo: String): Boolean {
+        val snapshot = FirebaseDatabase.getInstance()
+            .reference
+            .child("users")
+            .child(userId)
+            .child("nivel_progreso")
+            .child(nivelId.toString())
+            .get()
+            .await()
+
+        val completado = snapshot.child("completado").getValue(Boolean::class.java) ?: false
+        val tipoGuardado = snapshot.child("tipo").getValue(String::class.java) ?: "individual"
+
+        return completado && tipoGuardado == tipo
+    }
+
     suspend fun getNivelProgreso(userId: String): Map<Int, com.example.otriviafan.viewmodel.UserViewModel.NivelProgreso> {
         val snapshot = FirebaseDatabase.getInstance()
             .reference
@@ -328,18 +369,17 @@ class Repository {
         }
         return result
     }
-    suspend fun isMultiplayerRequiredForLevel(docName: String): Boolean {
-        val doc = FirebaseFirestore.getInstance()
-            .collection("questions_by_level")
-            .document(docName)
-            .get()
-            .await()
-
-        return doc.getBoolean("requiresMultiplayerWin") ?: false
-    }
+//    suspend fun isMultiplayerRequiredForLevel(docName: String): Boolean {
+//        val levelNumber = docName
+//            .split("_level")
+//            .getOrNull(1)
+//            ?.toIntOrNull() ?: return false
+//
+//        return requiereMultijugador(levelNumber)
+//    }
 
     // MULTIJUGADOR: Leer preguntas desde assets
-    suspend fun getRandomQuestionsFromFirestore(): List<QuestionWithAnswers> {
+  /*  suspend fun getRandomQuestionsFromFirestore(): List<QuestionWithAnswers> {
         val db = FirebaseFirestore.getInstance()
         val snapshot = db.collection("questions_by_level").get().await()
 
@@ -352,6 +392,8 @@ class Repository {
         return questionsList.map { questionMap ->
             val questionText = questionMap["questionText"] as? String ?: ""
             val correctAnswerId = (questionMap["correctAnswerId"] as? Number)?.toInt() ?: 0
+            val questionId = (questionMap["questionId"] as? Number)?.toInt() ?: 0
+
             val answers = (questionMap["answers"] as? List<Map<String, Any>>)?.map { ans ->
                 AnswerEntity(
                     id = (ans["id"] as? Number)?.toInt() ?: 0,
@@ -361,19 +403,18 @@ class Repository {
             } ?: emptyList()
 
             QuestionWithAnswers(
+                id = questionId,
                 questionText = questionText,
                 correctAnswerId = correctAnswerId,
                 answers = answers
             )
+
         }
-    }
-
-
-
-    // Resto del código sin cambios...
+    }*/
 
     // MULTIJUGADOR
-    suspend fun createMatchWithQuestions(playerId: String, questions: List<QuestionWithAnswers>): String {
+
+    suspend fun createMatchWithQuestions(playerId: String, nivelId: Int, questions: List<QuestionWithAnswers>): String {
         val matchId = realtimeDb.child("matches").push().key ?: return ""
 
         val match = Match(
@@ -383,7 +424,7 @@ class Repository {
             answered = mapOf(playerId to false),
             status = "waiting",
             difficulty = "",
-            level = 1
+            level = nivelId
         )
 
         realtimeDb.child("matches").child(matchId).setValue(match).await()
@@ -394,20 +435,28 @@ class Repository {
         val matchRef = realtimeDb.child("matches").child(matchId)
         matchRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val match = snapshot.getValue(Match::class.java)
-                match?.let { onUpdate(it) }
+                val match = snapshot.getValue(Match::class.java) ?: return
+                onUpdate(match)
             }
 
             override fun onCancelled(error: DatabaseError) {}
         })
     }
 
-    suspend fun joinOrCreateMatch(playerId: String, context: Context): String {
+
+    suspend fun joinOrCreateMatch(playerId: String, context: Context, nivelId: Int): String {
         val matchesSnapshot = realtimeDb.child("matches").get().await()
 
         for (matchSnap in matchesSnapshot.children) {
             val match = matchSnap.getValue(Match::class.java)
-            if (match != null && match.status == "waiting" && match.player1Id != playerId) {
+
+            // 👇 Verificamos que sea válida, esperando, no creada por el mismo jugador y sin segundo jugador
+            if (
+                match != null &&
+                match.status == "waiting" &&
+                match.player1Id != playerId &&
+                match.player2Id.isNullOrEmpty()
+            ) {
                 val matchId = match.matchId
 
                 val updatedMatch = match.copy(
@@ -416,15 +465,133 @@ class Repository {
                     status = "active"
                 )
 
+                println("✅ Uniendo a partida existente: $matchId como player2")
+
                 realtimeDb.child("matches").child(matchId).setValue(updatedMatch).await()
                 return matchId
             }
         }
 
-        // Si no hay partidas disponibles, crear una nueva con preguntas aleatorias
-        val questions = getRandomQuestionsFromFirestore()
-        return createMatchWithQuestions(playerId, questions)
+        //  Si no hay partida disponible, creamos una nueva
+        println("🆕 No hay partidas disponibles. Creando una nueva para playerId: $playerId")
+
+        val questions = getQuestionsForMultiplayerLevel(nivelId)
+        return createMatchWithQuestions(playerId, nivelId, questions)
     }
 
+     fun setPlayerAnswered(matchId: String, userId: String, answerId: Int) {
+        val matchRef = realtimeDb.child("matches").child(matchId)
+
+        matchRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                println("📨 Usuario $userId respondió en partida $matchId con respuesta $answerId")
+
+                val match = currentData.getValue(Match::class.java) ?: return Transaction.success(currentData)
+
+                if (match.answered[userId] == true) {
+                    return Transaction.success(currentData)
+                }
+
+
+                val currentQuestion = match.questions.getOrNull(match.currentQuestionIndex)
+                    ?: return Transaction.success(currentData)
+
+                val isCorrect = currentQuestion.correctAnswerId == answerId
+                val updatedAnswered = match.answered.toMutableMap().apply {
+                    this[userId] = true
+                }
+
+                var newWinner = match.currentWinner
+                var player1Score = match.player1Score
+                var player2Score = match.player2Score
+
+                if (isCorrect && newWinner == null) {
+                    newWinner = userId
+                    if (userId == match.player1Id) player1Score++ else if (userId == match.player2Id) player2Score++
+                }
+
+                val updatedMatch = match.copy(
+                    answered = updatedAnswered,
+                    player1Score = player1Score,
+                    player2Score = player2Score,
+                    currentWinner = newWinner
+                )
+
+                currentData.value = updatedMatch
+                return Transaction.success(currentData)
+            }
+
+            override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {}
+        })
+    }
+
+  /*  suspend fun updatePlayerScore(matchId: String, userId: String, newScore: Int) {
+        val matchSnapshot = realtimeDb.child("matches").child(matchId).get().await()
+        val match = matchSnapshot.getValue(Match::class.java) ?: return
+
+        val scoreField = when (userId) {
+            match.player1Id -> "player1Score"
+            match.player2Id -> "player2Score"
+            else -> return
+        }
+        realtimeDb.child("matches").child(matchId).child(scoreField).setValue(newScore).await()
+
+
+        realtimeDb.child("matches").child(matchId).child(scoreField).setValue(newScore).await()
+    }*/
+    fun nextQuestion(matchId: String) {
+        val matchRef = realtimeDb.child("matches").child(matchId)
+
+        matchRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                val match = currentData.getValue(Match::class.java) ?: return Transaction.success(currentData)
+
+                println("🔁 Intentando avanzar a siguiente pregunta - índice actual: ${match.currentQuestionIndex}")
+
+                val currentIndex = match.currentQuestionIndex
+                val totalQuestions = match.questions.size
+
+                return if (currentIndex + 1 >= totalQuestions) {
+                    println("✅ Partida finalizada")
+                    val updatedMatch = match.copy(status = "finished")
+                    currentData.value = updatedMatch
+                    Transaction.success(currentData)
+                } else {
+                    val newIndex = currentIndex + 1
+                    val resetAnswered = match.answered.mapValues { false }
+
+                    println("➡️ Siguiente pregunta: $newIndex")
+                    val updatedMatch = match.copy(
+                        currentQuestionIndex = newIndex,
+                        answered = resetAnswered,
+                        currentWinner = null
+                    )
+                    currentData.value = updatedMatch
+                    Transaction.success(currentData)
+                }
+            }
+
+            override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
+                if (error != null) {
+                    println("⚠️ Error al avanzar de pregunta: ${error.message}")
+                }
+            }
+        })
+    }
+
+
+    suspend fun getMultiplayerRequirementsMap(): Map<String, Boolean> {
+        val snapshot = FirebaseFirestore.getInstance()
+            .collection("questions_by_level")
+            .get()
+            .await()
+
+        return snapshot.documents.associate { doc ->
+            val docId = doc.id
+            val requiresMultiplayer = doc.getBoolean("requiresMultiplayerWin") ?: false
+            docId to requiresMultiplayer
+        }
+    }
+    fun esNivelMultiplayer(nivel: Int): Boolean = nivel % 4 == 0
 
 }

@@ -14,9 +14,14 @@ import androidx.navigation.navArgument
 import com.example.otriviafan.data.Repository
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.ui.screens.*
+import com.example.otriviafan.ui.screens.multiplayer.MultiPlayerEntryScreen
 import com.example.otriviafan.ui.screens.multiplayer.MultiPlayerGameScreen
+import com.example.otriviafan.ui.screens.multiplayer.MultiPlayerJoinScreen
+import com.example.otriviafan.ui.screens.multiplayer.MultiPlayerWaitingScreen
+import com.example.otriviafan.viewmodel.MatchViewModel
 import com.example.otriviafan.viewmodel.StoreViewModel
 import com.example.otriviafan.viewmodel.UserViewModel
+import com.example.otriviafan.viewmodel.factory.MatchViewModelFactory
 import com.example.otriviafan.viewmodel.factory.StoreViewModelFactory
 
 class MainActivity : ComponentActivity() {
@@ -34,6 +39,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val repository = remember { Repository() }
+    val matchViewModel: MatchViewModel = viewModel(factory = MatchViewModelFactory(repository))
     val storeViewModel: StoreViewModel = viewModel(factory = StoreViewModelFactory(repository))
     val userViewModel: UserViewModel = viewModel()
 
@@ -41,9 +47,14 @@ fun AppNavigation(navController: NavHostController) {
 
         // Pantallas iniciales
         composable(Screen.Splash.route) { SplashScreen(navController) }
-        composable(Screen.Login.route) { LoginScreen(navController) }
-        composable(Screen.Register.route) { RegisterScreen(navController) }
-        composable(Screen.Home.route) { HomeScreen(navController) } // ✅ Añadido
+        composable(Screen.Login.route) { LoginScreen(navController, userViewModel) }
+        composable(Screen.Register.route) { RegisterScreen(navController, userViewModel) }
+        composable(Screen.Home.route) { HomeScreen(navController) }
+
+        // Perfil del usuario
+        composable(Screen.Profile.route) {
+            ProfileScreen(navController)
+        }
 
         // Pantalla principal: mapa de niveles
         composable(Screen.LevelMap.route) {
@@ -56,14 +67,26 @@ fun AppNavigation(navController: NavHostController) {
             SinglePlayerScreen(navController = navController, nivelSeleccionado = nivel)
         }
 
-        // Juego multijugador desde el mapa
-        composable(
-            route = "multiplayer_game_screen/{nivelId}",
-            arguments = listOf(navArgument("nivelId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val nivelId = backStackEntry.arguments?.getInt("nivelId") ?: 1
-            MultiPlayerGameScreen(navController, nivelId)
+        composable("multiplayer_entry/{nivelId}") { backStackEntry ->
+            val nivelId = backStackEntry.arguments?.getString("nivelId")?.toIntOrNull() ?: 1
+            MultiPlayerEntryScreen(navController, nivelId)
         }
+
+        composable("multiplayer_waiting/{nivelId}") { backStackEntry ->
+            val nivelId = backStackEntry.arguments?.getString("nivelId")?.toIntOrNull() ?: 1
+            MultiPlayerWaitingScreen(navController, matchViewModel, nivelId)
+        }
+
+        composable("multiplayer_join/{nivelId}") { backStackEntry ->
+            val nivelId = backStackEntry.arguments?.getString("nivelId")?.toIntOrNull() ?: 1
+            MultiPlayerJoinScreen(navController, matchViewModel, nivelId)
+        }
+
+        composable(Screen.MultiPlayerGame.route) {
+            MultiPlayerGameScreen(navController, matchViewModel)
+        }
+
+
 
         // Tienda
         composable(Screen.Store.route) {
@@ -74,4 +97,5 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
     }
+
 }

@@ -3,6 +3,7 @@ package com.example.otriviafan.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.otriviafan.data.Repository
+import com.example.otriviafan.data.model.WallpaperItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -21,6 +22,8 @@ class StoreViewModel(private val repository: Repository) : ViewModel() {
 
     private val _successMessage = MutableStateFlow<String?>(null)
     val successMessage: StateFlow<String?> = _successMessage
+    private val _availableWallpapers = MutableStateFlow<List<WallpaperItem>>(emptyList())
+    val availableWallpapers: StateFlow<List<WallpaperItem>> = _availableWallpapers
 
     private var highestLevelUnlocked: Int = 1
 
@@ -65,6 +68,18 @@ class StoreViewModel(private val repository: Repository) : ViewModel() {
             }
         }
     }*/
+
+    fun loadAvailableWallpapers() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        viewModelScope.launch {
+            try {
+                val wallpapers = repository.getAllWallpapers()
+                _availableWallpapers.value = wallpapers
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
 
     fun refreshUserPurchases() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return

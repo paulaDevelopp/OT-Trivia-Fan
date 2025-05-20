@@ -113,6 +113,7 @@ dependencies {
     implementation("nl.joery.animatedbottombar:library:1.1.0")
     implementation("nl.dionsegijn:konfetti-compose:2.0.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.6.0")
 
 // Tests
     testImplementation(libs.junit)
