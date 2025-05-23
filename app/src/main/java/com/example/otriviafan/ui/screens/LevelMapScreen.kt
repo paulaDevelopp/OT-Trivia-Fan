@@ -22,36 +22,56 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpOffset
 import com.example.otriviafan.R
-
-enum class TipoNivel { INDIVIDUAL, MULTIJUGADOR }
-
-data class NivelUI(
-    val id: Int,
-    val tipo: TipoNivel,
-    val desbloqueado: Boolean,
-    val completado: Boolean
-)
-
+import com.example.otriviafan.data.model.NivelUI
+import com.example.otriviafan.data.model.TipoNivel
 @Composable
 fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
     val scope = rememberCoroutineScope()
     var niveles by remember { mutableStateOf<List<NivelUI>>(emptyList()) }
-
+    var levelNames by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
     LaunchedEffect(Unit) {
         scope.launch {
             val userId = userViewModel.getUserId()
-            val progreso = userViewModel.getNivelProgreso(userId)
 
-            // Solo 10 niveles
-            niveles = (1..10).map { id ->
-                val tipo = if (isMultiplayerLevel(id)) TipoNivel.MULTIJUGADOR else TipoNivel.INDIVIDUAL
-                val completado = progreso[id]?.completado == true
-                val desbloqueado = when (id) {
-                    1 -> true
-                    else -> progreso[id - 1]?.completado == true
+            // ✅ REFRESCA LOS DATOS DEL USUARIO DESDE FIREBASE
+            userViewModel.refreshUserData()
+
+            val progreso = userViewModel.getNivelProgreso(userId)
+            val repository = Repository()
+            val allLevelNames = repository.getAllLevelNamesOrdered()
+
+            val nuevosNiveles = mutableListOf<NivelUI>()
+            var desbloquear = true
+            var multiplayerPendiente = false
+
+            allLevelNames.forEachIndexed { index, levelName ->
+                val completado = progreso[levelName]?.completado == true
+                val tipo = if (repository.esNivelMultijugador(levelName)) TipoNivel.MULTIJUGADOR else TipoNivel.INDIVIDUAL
+
+                val desbloqueado = when {
+                    index == 0 -> true
+                    tipo == TipoNivel.MULTIJUGADOR -> desbloquear
+                    else -> desbloquear && !multiplayerPendiente
                 }
-                NivelUI(id, tipo, desbloqueado, completado)
+
+                if (tipo == TipoNivel.MULTIJUGADOR) {
+                    multiplayerPendiente = !completado
+                } else {
+                    desbloquear = completado
+                }
+
+                nuevosNiveles.add(
+                    NivelUI(
+                        id = index + 1,
+                        tipo = tipo,
+                        desbloqueado = desbloqueado,
+                        completado = completado
+                    )
+                )
             }
+
+            niveles = nuevosNiveles
+            levelNames = allLevelNames.mapIndexed { i, name -> (i + 1) to name }.toMap()
         }
     }
 
@@ -62,7 +82,7 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
     ) {
         Box(modifier = Modifier.height(1500.dp)) {
             Image(
-                painter = painterResource(id = R.drawable.fondo_niveles),
+                painter = painterResource(id = R.drawable.fondoniveles),
                 contentDescription = null,
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier.fillMaxSize()
@@ -82,7 +102,9 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
             )
 
             niveles.forEachIndexed { index, nivel ->
+                if (index >= posiciones.size) return@forEachIndexed
                 val puedeJugar = nivel.desbloqueado && !nivel.completado
+                val levelName = levelNames[nivel.id] ?: return@forEachIndexed
 
                 Box(
                     modifier = Modifier
@@ -97,9 +119,9 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
                         )
                         .clickable(enabled = puedeJugar) {
                             val route = if (nivel.tipo == TipoNivel.MULTIJUGADOR) {
-                                "multiplayer_entry/${nivel.id}"
+                                "multiplayer_entry/$levelName"
                             } else {
-                                "${Screen.SinglePlayer.route}/${nivel.id}"
+                                "${Screen.SinglePlayer.route}/$levelName"
                             }
                             navController.navigate(route)
                         },
@@ -110,8 +132,4 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
             }
         }
     }
-}
-
-fun isMultiplayerLevel(id: Int): Boolean {
-    return id % 4 == 0
 }

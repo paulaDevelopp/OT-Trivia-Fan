@@ -12,11 +12,11 @@ sealed class Screen(val route: String) {
     object SinglePlayer : Screen("single_player")
 
     // Modo multijugador clásico (opcional)
-    object MultiPlayerEntry : Screen("multiplayer_entry")
+   // object MultiPlayerEntry : Screen("multiplayer_entry")
     object MultiPlayerWaiting : Screen("multiplayer_waiting")
     object MultiPlayerJoin : Screen("multiplayer_join")
     object MultiPlayerGame : Screen("multiplayer_game")
-    object MultiPlayerResult : Screen("multiplayer_result")
+   // object MultiPlayerResult : Screen("multiplayer_result")
 
     // Tienda
     object Store : Screen("store")
@@ -28,7 +28,7 @@ sealed class Screen(val route: String) {
     object LevelMap : Screen("level_map")
 
     // Ruta para nivel multijugador nuevo con ID (ya está en MainActivity)
-    object MultiPlayerGameWithId : Screen("multiplayer_game_screen") {
+    /* object MultiPlayerGameWithId : Screen("multiplayer_game_screen") {
         fun createRoute(nivelId: Int) = "multiplayer_game_screen/$nivelId"
-    }
+    }*/
 }

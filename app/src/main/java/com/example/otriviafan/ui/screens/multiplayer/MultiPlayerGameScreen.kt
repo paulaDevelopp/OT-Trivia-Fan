@@ -44,29 +44,29 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
         }
     }
 
-    // Detectar si ganó y desbloquear nivel + sumar puntos
+    // Detectar si ganó, empató  o perdió y desbloquear nivel + sumar puntos
     LaunchedEffect(match.status) {
         if (match.status == "finished") {
+            /*-Si el jugador gana: suma 20 puntos y pasa de nivel
+             -Si empatan: solo pasa de nivel, no suma puntos
+             -Si pierde: no hace nada */
             val winner = when {
                 match.player1Score > match.player2Score -> match.player1Id
                 match.player2Score > match.player1Score -> match.player2Id
-                else -> null
+                else -> null // empate
             }
 
             val isWinner = (winner == userId)
-            youWon = isWinner
+            val isDraw = winner == null
+            youWon = if (isDraw) null else isWinner
 
             if (isWinner) {
-                val nextLevel = match.level + 1
-                val currentMax = repository.getUserLevel(userId)
-                if (nextLevel > currentMax) {
-                    repository.saveUserLevel(userId, nextLevel)
-                }
-
                 repository.addPoints(20)
-                repository.marcarNivelCompletado(userId, match.level, "multiplayer")
+            }
 
-                // Auto-navegación al mapa tras victoria
+            if (isWinner || isDraw) {
+                repository.marcarNivelCompletado(userId, match.levelName)
+
                 delay(3000)
                 navController.navigate(Screen.LevelMap.route) {
                     popUpTo(Screen.LevelMap.route) { inclusive = true }
@@ -75,6 +75,8 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
             }
         }
     }
+
+
 
     // UI (igual que antes)
     Column(
@@ -122,6 +124,7 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+            //Se muestra la pregunta actual.
             Text("Pregunta ${currentIndex + 1} / ${questions.size}", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(16.dp))
             Text(question.questionText, style = MaterialTheme.typography.bodyLarge)
@@ -132,6 +135,7 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
                     onClick = {
                         if (!hasAnswered) {
                             scope.launch {
+
                                 repository.setPlayerAnswered(match.matchId, userId, answer.id)
                             }
                         }

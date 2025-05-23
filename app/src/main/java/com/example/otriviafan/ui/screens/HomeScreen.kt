@@ -3,36 +3,40 @@ package com.example.otriviafan.ui.screens
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.otriviafan.R
 import com.example.otriviafan.navigation.Screen
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.sp
+import com.example.otriviafan.ui.theme.FredokaFont
+import com.example.otriviafan.ui.theme.LuckiestGuyFont
 
 @Composable
 fun HomeScreen(navController: NavController) {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Fondo
         Image(
-            painter = painterResource(id = R.drawable.fondo_home),
+            painter = painterResource(id = R.drawable.fondo3_home),
             contentDescription = "Fondo home",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -40,72 +44,82 @@ fun HomeScreen(navController: NavController) {
         Box(
             Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
+                .background(Color.Black.copy(alpha = 0.3f))
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp)
-                .padding(top = 64.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 32.dp, vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            AnimatedButton(
-                label = "🛍️ TIENDA",
-                backgroundColor = Color(0xFFBA68C8),
-                onClick = { navController.navigate(Screen.Store.route) },
-                modifier = Modifier.fillMaxWidth(0.7f).height(70.dp)
+            // Título
+            Image(
+                painter = painterResource(id = R.drawable.titulo_home),
+                contentDescription = "Título OTRIVIA FAN",
+                modifier = Modifier
+                    .fillMaxWidth(0.99f)
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
-
-            AnimatedButton(
+            OTStyledButton(
                 label = "🎯 J U G A R",
-                backgroundColor = Color(0xFF64B5F6),
-                fontSize = 24.sp,
-                onClick = { navController.navigate(Screen.LevelMap.route) },
-                modifier = Modifier.fillMaxWidth().height(100.dp)
-            )
+                height = 80.dp,
+                fontSize = 35.sp
+            ) { navController.navigate(Screen.LevelMap.route) }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+            OTStyledButton(
+                label = "🛍️ T I E N D A"
+            ) { navController.navigate(Screen.Store.route) }
 
-            AnimatedButton(
-                label = "👤 MI PERFIL",
-                backgroundColor = Color(0xFF9575CD),
-                onClick = { navController.navigate(Screen.Profile.route) },
-                modifier = Modifier.fillMaxWidth(0.7f).height(70.dp)
-            )
+            OTStyledButton(
+                label = "👤 M I   P E R F I L"
+            ) { navController.navigate(Screen.Profile.route) }
+            Spacer(modifier = Modifier.height(70.dp))
         }
     }
 }
+
 @Composable
-fun AnimatedButton(
+fun OTStyledButton(
     label: String,
-    backgroundColor: Color,
-    fontSize: TextUnit = 18.sp,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    height: Dp = 70.dp,
+    fontSize: TextUnit = 22.sp,
+    onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(targetValue = if (isPressed) 1.05f else 1f, label = "scale")
+    val scale by animateFloatAsState(targetValue = if (isPressed) 1.02f else 1f, label = "scale")
 
-    Button(
-        onClick = onClick,
-        interactionSource = interactionSource,
-        modifier = modifier
+    val shape = RoundedCornerShape(50)
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
             .scale(scale)
-            .shadow(12.dp, RoundedCornerShape(20.dp), ambientColor = Color.Cyan),
-        shape = RoundedCornerShape(20.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor)
+            .shadow(14.dp, shape)
+            .background(Color(0xFF00BFFF), shape)
+            .padding(4.dp)
+            .clip(shape)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFF4FC3F7), Color(0xFF0288D1))
+                )
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() }
+            .fillMaxWidth(0.85f)
+            .height(height)
     ) {
         Text(
             text = label,
-            color = Color.White,
             fontSize = fontSize,
-            fontWeight = FontWeight.SemiBold,
-            fontFamily = FontFamily.Serif
+            fontWeight = FontWeight.Black,
+            color = Color.White,
+            fontFamily = LuckiestGuyFont
         )
     }
 }

@@ -20,20 +20,23 @@ class MatchViewModel(private val repository: Repository) : ViewModel() {
         _match.value = updated.copy()
     }
 
-    fun createMatch(userId: String, context: Context, nivelId: Int) {
+    fun createMatch(userId: String, context: Context, levelName: String) {
         viewModelScope.launch {
-            val questions = repository.getQuestionsForMultiplayerLevel(nivelId)
-            val matchId = repository.createMatchWithQuestions(userId, nivelId, questions)
+            // Obtener preguntas para el nivel (ahora por nombre)
+            val questions = repository.getQuestionsForMultiplayerLevel(levelName)
+            // Crear nueva partida
+            val matchId = repository.createMatchWithQuestions(userId, levelName, questions)
 
+            // Suscribirse a los cambios
             repository.observeMatch(matchId) { updated ->
                 handleMatchUpdate(updated)
             }
         }
     }
 
-    fun joinMatch(userId: String, context: Context, nivelId: Int) {
+    fun joinMatch(userId: String, context: Context, levelName: String) {
         viewModelScope.launch {
-            val matchId = repository.joinOrCreateMatch(userId, context, nivelId)
+            val matchId = repository.joinOrCreateMatch(userId, context, levelName)
 
             repository.observeMatch(matchId) { updated ->
                 handleMatchUpdate(updated)
@@ -42,13 +45,12 @@ class MatchViewModel(private val repository: Repository) : ViewModel() {
     }
 
     private fun handleMatchUpdate(updated: Match) {
-        // Solo actualiza si cambia la pregunta, para evitar múltiples reinicios de UI
-        if (updated.currentQuestionIndex != lastHandledQuestionIndex) {
+        val current = _match.value
+        if (updated.currentQuestionIndex != lastHandledQuestionIndex ||
+            updated.answered != current?.answered ||
+            updated.status != current?.status) {
             lastHandledQuestionIndex = updated.currentQuestionIndex
-            setMatch(updated)
-        } else {
-            // Aun si no cambió, refrescamos el valor para mantenerlo sincronizado
-            _match.value = updated
+            _match.value = updated.copy()
         }
     }
 }

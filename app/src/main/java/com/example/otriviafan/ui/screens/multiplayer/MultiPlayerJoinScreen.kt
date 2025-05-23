@@ -11,12 +11,11 @@ import androidx.navigation.NavController
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.viewmodel.MatchViewModel
 import com.google.firebase.auth.FirebaseAuth
-
 @Composable
 fun MultiPlayerJoinScreen(
     navController: NavController,
     matchViewModel: MatchViewModel,
-    nivelId: Int
+    levelName: String
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -27,8 +26,7 @@ fun MultiPlayerJoinScreen(
 
     LaunchedEffect(joining) {
         if (joining) {
-            matchViewModel.joinMatch(uid, context, nivelId)
-
+            matchViewModel.joinMatch(uid, context, levelName)
         }
     }
 
@@ -58,8 +56,6 @@ fun MultiPlayerJoinScreen(
                 }
             }
         }
-
-
 
         if (joining) {
             CircularProgressIndicator()

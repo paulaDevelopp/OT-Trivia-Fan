@@ -1,5 +1,6 @@
-package com.example.otriviafan.data.entities
+/*package com.example.otriviafan.data.entities
 
 data class QuestionRequest(
     val level: Int
 )
+*/

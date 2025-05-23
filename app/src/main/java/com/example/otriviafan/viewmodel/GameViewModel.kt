@@ -8,6 +8,7 @@ import com.example.otriviafan.data.model.QuestionWithAnswers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+
 class GameViewModel(private val repository: Repository) : ViewModel() {
 
     private val _questions = MutableStateFlow<List<QuestionWithAnswers>>(emptyList())
@@ -37,14 +38,7 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
     private val usedQuestionIds = mutableSetOf<Int>()
 
     fun iniciarNivel(nivel: Int) {
-        _vidas.value = 1
-        _score.value = 0
-        _currentQuestionIndex.value = 0
-        _nivelSuperado.value = false
-        _vidasAgotadas.value = false
-        vidaUsada = false
-        falloYaCometido = false
-        usedQuestionIds.clear()
+        resetEstado()
 
         viewModelScope.launch {
             val firebaseQuestions = repository.getQuestionsByLevelIndex(nivel)
@@ -56,48 +50,61 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
             usedQuestionIds.addAll(firebaseQuestions.map { it.id })
 
             if (firebaseQuestions.isNotEmpty()) {
-                _answers.value = firebaseQuestions[0].answers.shuffled()
+                _answers.value = firebaseQuestions.first().answers.shuffled()
             }
         }
     }
 
-    fun responder(answer: AnswerEntity) {
-        val correcta = questions.value[currentQuestionIndex.value].correctAnswerId == answer.id
+    private fun resetEstado() {
+        _vidas.value = 1
+        _score.value = 0
+        _currentQuestionIndex.value = 0
+        _nivelSuperado.value = false
+        _vidasAgotadas.value = false
+        vidaUsada = false
+        falloYaCometido = false
+        usedQuestionIds.clear()
+    }
 
-        if (correcta) {
+    fun responder(answer: AnswerEntity) {
+        val preguntaActual = questions.value.getOrNull(currentQuestionIndex.value) ?: return
+        val esCorrecta = preguntaActual.correctAnswerId == answer.id
+
+        if (esCorrecta) {
             _score.value += 4
         } else {
-            if (!falloYaCometido) {
-                // Primera vez que falla
-                if (_score.value >= 20 && !vidaUsada) {
-                    _score.value -= 20
-                    vidaUsada = true
-                    // Se cancela el fallo, puede continuar
-                } else {
-                    falloYaCometido = true
-                    _vidas.value = 0
-                    _vidasAgotadas.value = true
-                    return
-                }
-            } else {
-                // Ya falló antes, se termina
-                _vidas.value = 0
-                _vidasAgotadas.value = true
-                return
-            }
+            manejarFallo()
+            if (_vidasAgotadas.value) return
         }
 
-        // Avanzar
-        if (_currentQuestionIndex.value + 1 < questions.value.size) {
-            _currentQuestionIndex.value += 1
-            _answers.value = questions.value[_currentQuestionIndex.value].answers.shuffled()
+        avanzarPregunta()
+    }
+
+    private fun manejarFallo() {
+        if (!falloYaCometido) {
+            if (_score.value >= 20 && !vidaUsada) {
+                _score.value -= 20
+                vidaUsada = true
+            } else {
+                falloYaCometido = true
+                _vidas.value = 0
+                _vidasAgotadas.value = true
+            }
         } else {
-            // Terminó el nivel
+            _vidas.value = 0
+            _vidasAgotadas.value = true
+        }
+    }
+
+    private fun avanzarPregunta() {
+        val siguienteIndex = _currentQuestionIndex.value + 1
+        if (siguienteIndex < questions.value.size) {
+            _currentQuestionIndex.value = siguienteIndex
+            _answers.value = questions.value[siguienteIndex].answers.shuffled()
+        } else {
             if (!falloYaCometido || vidaUsada) {
                 _nivelSuperado.value = true
             }
         }
     }
-
-
 }

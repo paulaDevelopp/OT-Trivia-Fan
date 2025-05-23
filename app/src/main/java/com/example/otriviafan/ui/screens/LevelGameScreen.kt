@@ -1,22 +1,9 @@
 package com.example.otriviafan.ui.screens
 
-import android.annotation.SuppressLint
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import com.example.otriviafan.viewmodel.LevelGameViewModel
-import com.example.otriviafan.viewmodel.factory.LevelGameViewModelFactory
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
+/*
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun LevelGameScreen(navController: NavController, selectedLevel: Int) {
@@ -180,7 +167,7 @@ fun LevelGameScreen(navController: NavController, selectedLevel: Int) {
     }
 }
 
-/*@Composable
+@Composable
 fun LevelCompletedDialog(
     onContinue: () -> Unit,
     score: Int,
@@ -209,7 +196,7 @@ fun OutOfLivesDialog(
         title = { Text("¡Te has quedado sin vidas!") },
         text = {
             if (canRetry) {
-                Text("¿Quieres usar 20 puntos para continuar?")
+                Text("¿Quieres usar 5 puntos para continuar?")
             } else {
                 Text("No tienes suficientes puntos para continuar.")
             }

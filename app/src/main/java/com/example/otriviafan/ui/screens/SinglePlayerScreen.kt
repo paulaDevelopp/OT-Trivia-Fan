@@ -23,20 +23,15 @@ import com.example.otriviafan.data.Repository
 import com.example.otriviafan.data.api.RetrofitClient
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.ui.components.ConfettiAnimation
-import com.example.otriviafan.util.nivelYaExisteEnFirebase
 import com.example.otriviafan.util.obtenerNombreArchivoPorNivel
-import com.example.otriviafan.util.subirPreguntasNivelDesdeAssets
-import com.example.otriviafan.viewmodel.LevelGameViewModel
+import com.example.otriviafan.viewmodel.SinglePlayerViewModel
 import com.example.otriviafan.viewmodel.UserViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.net.HttpURLConnection
-import java.net.URL@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
 @Composable
-fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
-    val viewModel: LevelGameViewModel = viewModel(factory = LevelGameViewModel.Factory(nivelSeleccionado))
+fun SinglePlayerScreen(navController: NavController, levelName: String) {
+    val viewModel: SinglePlayerViewModel = viewModel(factory = SinglePlayerViewModel.Factory(levelName))
     val userViewModel: UserViewModel = viewModel()
     val scope = rememberCoroutineScope()
 
@@ -55,13 +50,11 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
     var canRetry by remember { mutableStateOf(false) }
     var nivelYaCompletado by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
     val repository = Repository()
 
-    // 🔒 Verificar si el nivel ya fue completado
-    LaunchedEffect(nivelSeleccionado) {
+    LaunchedEffect(levelName) {
         val userId = userViewModel.getUserId()
-        val yaCompletado = repository.verificarNivelCompletado(userId, nivelSeleccionado, "individual")
+        val yaCompletado = repository.verificarNivelCompletado(userId, levelName)
         if (yaCompletado) {
             nivelYaCompletado = true
         } else {
@@ -69,14 +62,12 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
         }
     }
 
-    // ⚡ Diálogo si se queda sin vidas
     LaunchedEffect(outOfLives) {
         if (outOfLives) {
             canRetry = viewModel.canRetryWithPoints()
         }
     }
 
-    // 🔄 Refrescar datos si es necesario
     LaunchedEffect(shouldRefresh) {
         if (shouldRefresh) {
             userViewModel.refreshUserData()
@@ -88,23 +79,18 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
         OutOfLivesDialog(
             onRetry = {
                 scope.launch {
-                    // Paso 1: Mostrar x0 durante un instante
                     viewModel.setLives(0)
-                    delay(500) // deja que Compose pinte "x0"
-
-                    // Paso 2: Reintentar con puntos
+                    delay(500)
                     val retried = viewModel.retryUsingPoints()
-
                     if (!retried) {
                         delay(300)
                         navController.popBackStack()
                     }
                 }
             },
-
             onExit = {
                 scope.launch {
-                    delay(300) // Igual si elige salir sin reintentar
+                    delay(300)
                     navController.popBackStack()
                 }
             },
@@ -114,19 +100,16 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
 
     if (nivelSubido) {
         if (partidaPerfecta) {
-            showConfetti = true // solo si fue perfecta
+            showConfetti = true
         }
 
-        val siguienteNivel = nivelSeleccionado + 1
-        val archivoUsado = obtenerNombreArchivoPorNivel(context, siguienteNivel)
         val dificultad = when {
-            archivoUsado?.startsWith("easy") == true -> "easy"
-            archivoUsado?.startsWith("medium") == true -> "medium"
-            archivoUsado?.startsWith("difficult") == true -> "difficult"
+            levelName.startsWith("easy") -> "easy"
+            levelName.startsWith("medium") -> "medium"
+            levelName.startsWith("difficult") -> "difficult"
             else -> "unknown"
         }
 
-        // Subir wallpapers del siguiente nivel
         scope.launch {
             try {
                 val response = RetrofitClient.instance.uploadWallpapers(dificultad)
@@ -140,12 +123,10 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
             }
         }
 
-        // ✅ GUARDAR PROGRESO (USANDO VIEWMODEL)
         scope.launch {
-            userViewModel.marcarNivelComoCompletado(nivelSeleccionado, "individual")
+            userViewModel.marcarNivelComoCompletado(levelName)
         }
 
-        // Mensaje personalizado
         val mensaje = if (partidaPerfecta)
             "¡Has hecho una partida perfecta! Respondiste correctamente todas las preguntas."
         else
@@ -168,7 +149,6 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
             }
         )
     }
-
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -216,8 +196,12 @@ fun SinglePlayerScreen(navController: NavController, nivelSeleccionado: Int) {
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("Nivel $nivelSeleccionado", color = Color.White, style = MaterialTheme.typography.titleMedium)
-                    Text("Pregunta ${currentQuestionIndex + 1} / 5", color = Color.White.copy(alpha = 0.8f))
+                    Text(
+                        "Nivel: ${levelName.replace("_", " ").replaceFirstChar { it.uppercase() }}",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text("Pregunta ${currentQuestionIndex + 1} / ${questions.size}", color = Color.White.copy(alpha = 0.8f))
                 }
             }
 

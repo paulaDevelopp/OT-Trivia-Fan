@@ -12,6 +12,8 @@ import com.example.otriviafan.viewmodel.MatchViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import com.example.otriviafan.data.model.PuntosUsuario
+import com.google.firebase.database.FirebaseDatabase
 
 @Composable
 fun MultiPlayerResultScreen(
@@ -73,22 +75,21 @@ fun MultiPlayerResultScreen(
     }
 }
 
-// ✅ Función que guarda los puntos en Firestore
 fun savePointsForUser(pointsToAdd: Int) {
-    val currentUser = FirebaseAuth.getInstance().currentUser
-    val db = FirebaseFirestore.getInstance()
+    val currentUser = FirebaseAuth.getInstance().currentUser ?: return
+    val userRef = FirebaseDatabase.getInstance().reference
+        .child("users")
+        .child(currentUser.uid)
+        .child("puntos")
 
-    currentUser?.let { user ->
-        val userRef = db.collection("users").document(user.uid)
-
-        db.runTransaction { transaction ->
-            val snapshot = transaction.get(userRef)
-            val currentPoints = snapshot.getLong("points") ?: 0
-            transaction.update(userRef, "points", currentPoints + pointsToAdd)
-        }.addOnSuccessListener {
-            // Éxito
-        }.addOnFailureListener { e ->
-            e.printStackTrace()
-        }
+    userRef.get().addOnSuccessListener { snapshot ->
+        val current = snapshot.getValue(PuntosUsuario::class.java) ?: PuntosUsuario()
+        val updated = current.copy(
+            total = current.total + pointsToAdd,
+            ultimaActualizacion = System.currentTimeMillis()
+        )
+        userRef.setValue(updated)
+    }.addOnFailureListener {
+        it.printStackTrace()
     }
 }

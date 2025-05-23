@@ -10,13 +10,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.viewmodel.MatchViewModel
-import com.google.firebase.auth.FirebaseAuth
-
-@Composable
+import com.google.firebase.auth.FirebaseAuth@Composable
 fun MultiPlayerWaitingScreen(
     navController: NavController,
     matchViewModel: MatchViewModel,
-    nivelId: Int
+    levelName: String
 ) {
     val match = matchViewModel.match.collectAsState().value
     val context = LocalContext.current
@@ -24,8 +22,7 @@ fun MultiPlayerWaitingScreen(
 
     // Crear partida con preguntas aleatorias
     LaunchedEffect(Unit) {
-        matchViewModel.createMatch(uid, context, nivelId)
-
+        matchViewModel.createMatch(uid, context, levelName)
     }
 
     Column(
@@ -50,8 +47,6 @@ fun MultiPlayerWaitingScreen(
                 }
             }
         }
-
-
 
         CircularProgressIndicator()
     }

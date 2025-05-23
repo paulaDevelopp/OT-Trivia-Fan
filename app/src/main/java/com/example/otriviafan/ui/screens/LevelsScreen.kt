@@ -17,7 +17,6 @@ import androidx.navigation.NavController
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.viewmodel.UserViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.otriviafan.data.model.Nivel
 /*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

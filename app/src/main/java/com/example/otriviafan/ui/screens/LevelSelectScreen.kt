@@ -1,4 +1,4 @@
-package com.example.otriviafan.ui.screens
+/*package com.example.otriviafan.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -115,3 +115,4 @@ fun LevelSelectScreen(
         }
     }
 }
+*/

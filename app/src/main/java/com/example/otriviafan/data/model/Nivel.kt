@@ -1,12 +1,10 @@
 package com.example.otriviafan.data.model
 
-enum class TipoNivel {
-    INDIVIDUAL, MULTIJUGADOR
-}
+enum class TipoNivel { INDIVIDUAL, MULTIJUGADOR }
 
-data class Nivel(
+data class NivelUI(
     val id: Int,
     val tipo: TipoNivel,
-    var desbloqueado: Boolean = false,
-    var completado: Boolean = false
+    val desbloqueado: Boolean,
+    val completado: Boolean
 )

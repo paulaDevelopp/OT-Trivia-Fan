@@ -10,7 +10,7 @@ import androidx.navigation.NavController
 import com.example.otriviafan.navigation.Screen
 
 @Composable
-fun MultiPlayerEntryScreen(navController: NavController,nivelId: Int) {
+fun MultiPlayerEntryScreen(navController: NavController, levelName: String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -22,7 +22,7 @@ fun MultiPlayerEntryScreen(navController: NavController,nivelId: Int) {
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(onClick = {
-            navController.navigate("${Screen.MultiPlayerWaiting.route}/$nivelId")
+            navController.navigate("multiplayer_waiting/$levelName")
         }) {
             Text("Crear partida")
         }
@@ -30,7 +30,7 @@ fun MultiPlayerEntryScreen(navController: NavController,nivelId: Int) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            navController.navigate("${Screen.MultiPlayerJoin.route}/$nivelId")
+            navController.navigate("multiplayer_join/$levelName")
         }) {
             Text("Unirse a partida")
         }

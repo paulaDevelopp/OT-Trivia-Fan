@@ -1,4 +1,3 @@
-package com.example.otriviafan.data.entities
 
 /*data class StoreItem(
     val id: String = "",

@@ -5,19 +5,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.otriviafan.data.Repository
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.ui.screens.*
-import com.example.otriviafan.ui.screens.multiplayer.MultiPlayerEntryScreen
-import com.example.otriviafan.ui.screens.multiplayer.MultiPlayerGameScreen
-import com.example.otriviafan.ui.screens.multiplayer.MultiPlayerJoinScreen
-import com.example.otriviafan.ui.screens.multiplayer.MultiPlayerWaitingScreen
+import com.example.otriviafan.ui.screens.multiplayer.*
 import com.example.otriviafan.viewmodel.MatchViewModel
 import com.example.otriviafan.viewmodel.StoreViewModel
 import com.example.otriviafan.viewmodel.UserViewModel
@@ -38,7 +37,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    val repository = remember { Repository() }
+    val repository = Repository()
     val matchViewModel: MatchViewModel = viewModel(factory = MatchViewModelFactory(repository))
     val storeViewModel: StoreViewModel = viewModel(factory = StoreViewModelFactory(repository))
     val userViewModel: UserViewModel = viewModel()
@@ -56,37 +55,48 @@ fun AppNavigation(navController: NavHostController) {
             ProfileScreen(navController)
         }
 
-        // Pantalla principal: mapa de niveles
+        // Mapa de niveles
         composable(Screen.LevelMap.route) {
             LevelMapScreen(navController = navController, userViewModel = userViewModel)
         }
 
-        // Juego individual
-        composable("${Screen.SinglePlayer.route}/{nivel}") { backStackEntry ->
-            val nivel = backStackEntry.arguments?.getString("nivel")?.toIntOrNull() ?: 1
-            SinglePlayerScreen(navController = navController, nivelSeleccionado = nivel)
+        // Juego individual con levelName como argumento
+        composable(
+            "${Screen.SinglePlayer.route}/{levelName}",
+            arguments = listOf(navArgument("levelName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val levelName = backStackEntry.arguments?.getString("levelName") ?: "easy_level1"
+            SinglePlayerScreen(navController = navController, levelName = levelName)
         }
 
-        composable("multiplayer_entry/{nivelId}") { backStackEntry ->
-            val nivelId = backStackEntry.arguments?.getString("nivelId")?.toIntOrNull() ?: 1
-            MultiPlayerEntryScreen(navController, nivelId)
+        // Multijugador con levelName como argumento
+        composable(
+            "multiplayer_entry/{levelName}",
+            arguments = listOf(navArgument("levelName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val levelName = backStackEntry.arguments?.getString("levelName") ?: "easy_level1"
+            MultiPlayerEntryScreen(navController, levelName)
         }
 
-        composable("multiplayer_waiting/{nivelId}") { backStackEntry ->
-            val nivelId = backStackEntry.arguments?.getString("nivelId")?.toIntOrNull() ?: 1
-            MultiPlayerWaitingScreen(navController, matchViewModel, nivelId)
+        composable("multiplayer_waiting/{levelName}",
+            arguments = listOf(navArgument("levelName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val levelName = backStackEntry.arguments?.getString("levelName") ?: "easy_level1"
+            MultiPlayerWaitingScreen(navController, matchViewModel, levelName)
         }
 
-        composable("multiplayer_join/{nivelId}") { backStackEntry ->
-            val nivelId = backStackEntry.arguments?.getString("nivelId")?.toIntOrNull() ?: 1
-            MultiPlayerJoinScreen(navController, matchViewModel, nivelId)
+
+        composable(
+            "multiplayer_join/{levelName}",
+            arguments = listOf(navArgument("levelName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val levelName = backStackEntry.arguments?.getString("levelName") ?: "easy_level1"
+            MultiPlayerJoinScreen(navController, matchViewModel, levelName)
         }
 
         composable(Screen.MultiPlayerGame.route) {
             MultiPlayerGameScreen(navController, matchViewModel)
         }
-
-
 
         // Tienda
         composable(Screen.Store.route) {
@@ -97,5 +107,4 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
     }
-
 }

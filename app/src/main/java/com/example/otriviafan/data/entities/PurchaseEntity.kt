@@ -1,4 +1,4 @@
-package com.example.otriviafan.data.entities
+/*package com.example.otriviafan.data.entities
 
 data class PurchaseEntity(
     val id: Int = 0,
@@ -6,3 +6,4 @@ data class PurchaseEntity(
     val storeItemId: String = "",
     val purchaseDate: Long = System.currentTimeMillis()
 )
+*/

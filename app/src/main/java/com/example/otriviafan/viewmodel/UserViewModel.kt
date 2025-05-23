@@ -35,7 +35,10 @@ class UserViewModel : ViewModel() {
 
     fun loadUserDataFor(uid: String) {
         viewModelScope.launch {
-            _highestLevelUnlocked.value = repository.getUserLevel(uid)
+            val userLevelName = repository.getUserLevel(uid)
+            val allLevels = repository.getAllLevelNamesOrdered()
+            val levelIndex = allLevels.indexOf(userLevelName) + 1 // +1 porque los índices comienzan en 0
+            _highestLevelUnlocked.value = levelIndex
             _points.value = repository.getUserPoints(uid)
             _purchasedWallpapers.value = repository.getUserWallpaperPurchases(uid)
             _unlockedWallpapers.value = repository.getUnlockedWallpapers(uid)
@@ -95,7 +98,7 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    suspend fun getNivelProgreso(userId: String): Map<Int, NivelProgreso> {
+    suspend fun getNivelProgreso(userId: String): Map<String, NivelProgreso> {
         return repository.getNivelProgreso(userId)
     }
 
@@ -112,14 +115,15 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun marcarNivelComoCompletado(nivelId: Int, tipo: String) {
+    fun marcarNivelComoCompletado(levelName: String) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
-            repository.marcarNivelCompletado(uid, nivelId, tipo)
+            repository.marcarNivelCompletado(uid, levelName)
             _unlockedWallpapers.value = repository.getUnlockedWallpapers(uid)
             _availableWallpapers.value = loadAndSortWallpapersFor(uid)
         }
     }
+
 
     fun getUserId(): String = auth.currentUser?.uid.orEmpty()
 

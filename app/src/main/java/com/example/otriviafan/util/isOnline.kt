@@ -1,4 +1,4 @@
-package com.example.otriviafan.util
+/*package com.example.otriviafan.util
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -10,3 +10,4 @@ fun isOnline(context: Context): Boolean {
     val capabilities = connectivityManager.getNetworkCapabilities(network)
     return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
 }
+*/
