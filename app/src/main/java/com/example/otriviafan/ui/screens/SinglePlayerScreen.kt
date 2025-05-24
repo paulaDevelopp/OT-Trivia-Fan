@@ -20,7 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.otriviafan.R
 import com.example.otriviafan.data.Repository
-import com.example.otriviafan.data.api.RetrofitClient
+//import com.example.otriviafan.data.api.RetrofitClient
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.ui.components.ConfettiAnimation
 import com.example.otriviafan.viewmodel.SinglePlayerViewModel
@@ -112,16 +112,16 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
             showConfetti = true
         }
 
-        val dificultad = when {
+      /*  val dificultad = when {
             levelName.startsWith("easy") -> "easy"
             levelName.startsWith("medium") -> "medium"
             levelName.startsWith("difficult") -> "difficult"
             else -> "unknown"
         }
 
-        scope.launch {
+       scope.launch {
             try {
-                val response = RetrofitClient.instance.uploadWallpapers(dificultad)
+                //val response = RetrofitClient.instance.uploadWallpapers(dificultad)
                 if (response.isSuccessful) {
                     println("Fondos subidos: ${response.body()?.difficulty}")
                 } else {
@@ -131,7 +131,7 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
                 println("Error en Retrofit: ${e.message}")
             }
         }
-
+^*/
         scope.launch {
             userViewModel.marcarNivelComoCompletado(levelName)
         }

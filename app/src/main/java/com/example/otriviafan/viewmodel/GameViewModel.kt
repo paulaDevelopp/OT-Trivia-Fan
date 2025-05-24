@@ -1,5 +1,5 @@
 package com.example.otriviafan.viewmodel
-
+/*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.otriviafan.data.Repository
@@ -108,3 +108,4 @@ class GameViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 }
+*/

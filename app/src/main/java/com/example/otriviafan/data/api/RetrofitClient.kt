@@ -1,5 +1,5 @@
 package com.example.otriviafan.data.api
-
+/*
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -14,4 +14,4 @@ object RetrofitClient {
 
         retrofit.create(ApiService::class.java)
     }
-}
+}*/

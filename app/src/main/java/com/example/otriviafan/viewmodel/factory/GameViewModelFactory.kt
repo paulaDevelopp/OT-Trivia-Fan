@@ -1,5 +1,5 @@
 package com.example.otriviafan.viewmodel.factory
-
+/*
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -13,3 +13,4 @@ class GameViewModelFactory(private val context: Context) : ViewModelProvider.Fac
         return GameViewModel(repository) as T
     }
 }
+*/

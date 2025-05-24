@@ -106,17 +106,20 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
                 val puedeJugar = nivel.desbloqueado && !nivel.completado
                 val levelName = levelNames[nivel.id] ?: return@forEachIndexed
 
+                val iconResId = when {
+                    nivel.tipo == TipoNivel.INDIVIDUAL && nivel.completado -> R.drawable.individual_superado
+                    nivel.tipo == TipoNivel.INDIVIDUAL && puedeJugar -> R.drawable.individual_actual
+                    nivel.tipo == TipoNivel.INDIVIDUAL -> R.drawable.individual_bloqueado
+                    nivel.tipo == TipoNivel.MULTIJUGADOR && nivel.completado -> R.drawable.multi_ganado
+                    nivel.tipo == TipoNivel.MULTIJUGADOR && puedeJugar -> R.drawable.multi_actual
+                    else -> R.drawable.multi_bloqueado
+                }
+
+
                 Box(
                     modifier = Modifier
                         .offset(x = posiciones[index].x, y = posiciones[index].y)
-                        .size(60.dp)
-                        .background(
-                            color = when {
-                                nivel.tipo == TipoNivel.MULTIJUGADOR -> if (nivel.completado) Color(0xFF1976D2) else if (nivel.desbloqueado) Color(0xFF64B5F6) else Color.LightGray
-                                else -> if (nivel.completado) Color(0xFF388E3C) else if (nivel.desbloqueado) Color(0xFF81C784) else Color.Gray
-                            },
-                            shape = CircleShape
-                        )
+                        .size(80.dp)
                         .clickable(enabled = puedeJugar) {
                             val route = if (nivel.tipo == TipoNivel.MULTIJUGADOR) {
                                 "multiplayer_entry/$levelName"
@@ -127,9 +130,15 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(nivel.id.toString(), color = Color.White)
+                    Image(
+                        painter = painterResource(id = iconResId),
+                        contentDescription = "Nivel ${nivel.id}",
+                        modifier = Modifier.size(70.dp)
+                    )
                 }
             }
+
+        }
         }
     }
-}
+
