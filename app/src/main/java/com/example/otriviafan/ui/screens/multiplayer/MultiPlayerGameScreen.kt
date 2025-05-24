@@ -45,7 +45,7 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
     }
 
     // Detectar si ganó, empató  o perdió y desbloquear nivel + sumar puntos
-    LaunchedEffect(match.status) {
+   /* LaunchedEffect(match.status) {
         if (match.status == "finished") {
             /*-Si el jugador gana: suma 20 puntos y pasa de nivel
              -Si empatan: solo pasa de nivel, no suma puntos
@@ -72,6 +72,49 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
                     popUpTo(Screen.LevelMap.route) { inclusive = true }
                     launchSingleTop = true
                 }
+            }
+        }
+    }
+*/
+    // Detectar si ganó, empató o perdió y desbloquear nivel + sumar puntos
+    LaunchedEffect(match.status) {
+        if (match.status == "finished") {
+            val player1Score = match.player1Score
+            val player2Score = match.player2Score
+
+            val isZeroZero = player1Score == 0 && player2Score == 0
+            val isDraw = player1Score == player2Score && !isZeroZero
+
+            val winner = when {
+                player1Score > player2Score -> match.player1Id
+                player2Score > player1Score -> match.player2Id
+                isDraw -> null
+                else -> null // caso 0-0
+            }
+
+            val isWinner = (winner == userId)
+
+            youWon = when {
+                isWinner -> true
+                isDraw -> null // empate sin ganador
+                isZeroZero -> false // nadie ganó
+                else -> false
+            }
+
+            // Solo suma puntos si ganó
+            if (isWinner) {
+                repository.addPoints(20)
+            }
+
+            // Solo marca nivel como completado si ganó o empató (no en 0-0)
+            if (isWinner || isDraw) {
+                repository.marcarNivelCompletado(userId, match.levelName)
+            }
+
+            delay(3000)
+            navController.navigate(Screen.LevelMap.route) {
+                popUpTo(Screen.LevelMap.route) { inclusive = true }
+                launchSingleTop = true
             }
         }
     }

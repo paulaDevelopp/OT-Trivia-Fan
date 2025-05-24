@@ -23,15 +23,18 @@ import com.example.otriviafan.data.Repository
 import com.example.otriviafan.data.api.RetrofitClient
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.ui.components.ConfettiAnimation
-import com.example.otriviafan.util.obtenerNombreArchivoPorNivel
 import com.example.otriviafan.viewmodel.SinglePlayerViewModel
 import com.example.otriviafan.viewmodel.UserViewModel
+import com.example.otriviafan.viewmodel.factory.SinglePlayerViewModelFactory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
 @Composable
 fun SinglePlayerScreen(navController: NavController, levelName: String) {
-    val viewModel: SinglePlayerViewModel = viewModel(factory = SinglePlayerViewModel.Factory(levelName))
+    val viewModel: SinglePlayerViewModel = viewModel(
+        factory = SinglePlayerViewModelFactory(levelName)
+    )
     val userViewModel: UserViewModel = viewModel()
     val scope = rememberCoroutineScope()
 
@@ -49,6 +52,7 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
     var showConfetti by remember { mutableStateOf(false) }
     var canRetry by remember { mutableStateOf(false) }
     var nivelYaCompletado by remember { mutableStateOf(false) }
+    var showPauseDialog by remember { mutableStateOf(false) }
 
     val repository = Repository()
 
@@ -72,6 +76,11 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
         if (shouldRefresh) {
             userViewModel.refreshUserData()
             viewModel.setRefreshHandled()
+        }
+    }
+    LaunchedEffect(levelCompleted) {
+        if (levelCompleted && !nivelSubido && !outOfLives) {
+            viewModel.finishLevel()
         }
     }
 
@@ -150,6 +159,30 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
         )
     }
 
+    if (showPauseDialog) {
+        AlertDialog(
+            onDismissRequest = { showPauseDialog = false },
+            title = { Text("¿Pausar partida?") },
+            text = { Text("Si sales ahora, no se guardará el progreso de este nivel.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showPauseDialog = false
+                    navController.navigate(Screen.LevelMap.route) {
+                        popUpTo(Screen.LevelMap.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }) {
+                    Text("Salir al mapa")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPauseDialog = false }) {
+                    Text("Continuar")
+                }
+            }
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.ot_sinlogo),
@@ -202,6 +235,16 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text("Pregunta ${currentQuestionIndex + 1} / ${questions.size}", color = Color.White.copy(alpha = 0.8f))
+                }
+
+                IconButton(onClick = { showPauseDialog = true }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.pausa),
+                        contentDescription = "Pausa",
+                        modifier = Modifier.size(52.dp), // Establece un tamaño razonable
+                        tint = Color.Unspecified // No intentes aplicar un tinte si es una imagen a color
+                    )
+
                 }
             }
 

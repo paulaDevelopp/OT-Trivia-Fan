@@ -1,7 +1,6 @@
 package com.example.otriviafan.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.otriviafan.data.Repository
 import com.example.otriviafan.data.model.QuestionWithAnswers
@@ -9,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+
 class SinglePlayerViewModel(
     private val repository: Repository,
     private val levelName: String
@@ -95,7 +95,7 @@ class SinglePlayerViewModel(
             if (_lives.value <= 0) {
                 _outOfLives.value = true
             } else if (_currentQuestionIndex.value + 1 >= numeroPreguntas) {
-                finishLevel()
+                _levelCompleted.value = true
             } else {
                 _currentQuestionIndex.value += 1
             }
@@ -105,6 +105,13 @@ class SinglePlayerViewModel(
     fun finishLevel() {
         viewModelScope.launch {
             val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+
+            val yaCompletado = repository.verificarNivelCompletado(userId, levelName)
+            if (yaCompletado) {
+                _levelCompleted.value = true
+                _userDataShouldRefresh.value = true
+                return@launch
+            }
 
             val hizoPerfecta = _score.value == (numeroPreguntas * puntosPorPregunta) && !huboError
             val perfectoConReintento = _score.value == (numeroPreguntas * puntosPorPregunta) && huboError && usadoReintento
@@ -120,20 +127,26 @@ class SinglePlayerViewModel(
                     val currentLevelName = repository.getUserLevel(userId)
                     val levels = repository.getAllLevelNamesOrdered()
 
-                    if (currentLevelName == levelName) {
-                        repository.incrementUserLevel(userId)
+                    val currentIndex = levels.indexOfFirst { it.trim().equals(currentLevelName.trim(), ignoreCase = true) }
+                    val playingIndex = levels.indexOfFirst { it.trim().equals(levelName.trim(), ignoreCase = true) }
+
+                    if (currentIndex != -1 && playingIndex >= currentIndex) {
+                        repository.saveUserLevel(userId, levelName)
                         _nivelSubido.value = true
+
                         if (levelName.contains("level1")) {
                             _mostrarSubidaDeNivelDesdeNivel1.value = true
                         }
                     }
 
+
                     repository.unlockWallpaperForLevel(userId, levelName)
                 }
-
             } else if (!esMultijugador) {
                 repository.saveUserLevel(userId, levelName)
             }
+
+            repository.marcarNivelCompletado(userId, levelName)
 
             _userDataShouldRefresh.value = true
             _levelCompleted.value = true
@@ -174,13 +187,5 @@ class SinglePlayerViewModel(
 
     fun setLives(value: Int) {
         _lives.value = value
-    }
-
-    companion object {
-        fun Factory(levelName: String) = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return SinglePlayerViewModel(Repository(), levelName) as T
-            }
-        }
     }
 }

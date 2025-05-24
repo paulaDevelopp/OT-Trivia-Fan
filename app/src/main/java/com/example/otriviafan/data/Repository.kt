@@ -504,7 +504,7 @@ class Repository {
                 match.status == "waiting" &&
                 match.player1Id != playerId &&
                 match.player2Id.isNullOrEmpty() &&
-                match.levelName == levelName
+                match.levelName.trim() == levelName.trim() // para evitar errores de espacios
             ) {
                 val matchId = match.matchId
                 val updatedMatch = match.copy(
