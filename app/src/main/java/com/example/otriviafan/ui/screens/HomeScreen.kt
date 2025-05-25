@@ -36,7 +36,7 @@ fun HomeScreen(navController: NavController) {
     Box(modifier = Modifier.fillMaxSize()) {
         // Fondo
         Image(
-            painter = painterResource(id = R.drawable.fondo3_home),
+            painter = painterResource(id = R.drawable.fondo__home),
             contentDescription = "Fondo home",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -54,18 +54,20 @@ fun HomeScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            // Título
+
+            // Logo
             Image(
-                painter = painterResource(id = R.drawable.titulo_home),
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Título OTRIVIA FAN",
                 modifier = Modifier
                     .fillMaxWidth(0.99f)
+                    .size(358.dp)
             )
 
             OTStyledButton(
                 label = "🎯 J U G A R",
-                height = 80.dp,
-                fontSize = 35.sp
+                height = 100.dp,
+                fontSize = 40.sp
             ) { navController.navigate(Screen.LevelMap.route) }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -118,7 +120,7 @@ fun OTStyledButton(
             text = label,
             fontSize = fontSize,
             fontWeight = FontWeight.Black,
-            color = Color.White,
+            color = Color.LightGray,
             fontFamily = LuckiestGuyFont
         )
     }

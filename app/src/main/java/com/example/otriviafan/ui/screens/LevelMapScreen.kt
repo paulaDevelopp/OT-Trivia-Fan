@@ -33,7 +33,6 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
         scope.launch {
             val userId = userViewModel.getUserId()
 
-            // ✅ REFRESCA LOS DATOS DEL USUARIO DESDE FIREBASE
             userViewModel.refreshUserData()
 
             val progreso = userViewModel.getNivelProgreso(userId)
@@ -74,31 +73,38 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
             levelNames = allLevelNames.mapIndexed { i, name -> (i + 1) to name }.toMap()
         }
     }
-
+    Image(
+        painter = painterResource(id = R.drawable.fondo_home_),
+        contentDescription = null,
+        contentScale = ContentScale.FillBounds,
+        modifier = Modifier.fillMaxSize()
+    )
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
         Box(modifier = Modifier.height(1500.dp)) {
+
             Image(
-                painter = painterResource(id = R.drawable.fondoniveles),
+                painter = painterResource(id = R.drawable.camino),
                 contentDescription = null,
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier.fillMaxSize()
-            )
 
+
+            )
             val posiciones = listOf(
-                DpOffset(100.dp, 80.dp),
-                DpOffset(200.dp, 180.dp),
-                DpOffset(80.dp, 280.dp),
-                DpOffset(220.dp, 400.dp),
-                DpOffset(110.dp, 500.dp),
-                DpOffset(180.dp, 620.dp),
-                DpOffset(100.dp, 720.dp),
-                DpOffset(190.dp, 850.dp),
-                DpOffset(130.dp, 960.dp),
-                DpOffset(160.dp, 1080.dp)
+                DpOffset(140.dp, 80.dp),
+                DpOffset(90.dp, 200.dp),
+                DpOffset(200.dp, 320.dp),
+                DpOffset(100.dp, 440.dp),
+                DpOffset(180.dp, 560.dp),
+                DpOffset(100.dp, 680.dp),
+                DpOffset(190.dp, 800.dp),
+                DpOffset(120.dp, 920.dp),
+                DpOffset(160.dp, 1040.dp),
+                DpOffset(130.dp, 1160.dp)
             )
 
             niveles.forEachIndexed { index, nivel ->
@@ -109,9 +115,9 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
                 val iconResId = when {
                     nivel.tipo == TipoNivel.INDIVIDUAL && nivel.completado -> R.drawable.individual_superado
                     nivel.tipo == TipoNivel.INDIVIDUAL && puedeJugar -> R.drawable.individual_actual
-                    nivel.tipo == TipoNivel.INDIVIDUAL -> R.drawable.individual_bloqueado
-                    nivel.tipo == TipoNivel.MULTIJUGADOR && nivel.completado -> R.drawable.multi_ganado
-                    nivel.tipo == TipoNivel.MULTIJUGADOR && puedeJugar -> R.drawable.multi_actual
+                    nivel.tipo == TipoNivel.INDIVIDUAL -> R.drawable.multijugador_bloqueado
+                    nivel.tipo == TipoNivel.MULTIJUGADOR && nivel.completado -> R.drawable.multijugador_ganado
+                    nivel.tipo == TipoNivel.MULTIJUGADOR && puedeJugar -> R.drawable.multijugador_actual
                     else -> R.drawable.multi_bloqueado
                 }
 

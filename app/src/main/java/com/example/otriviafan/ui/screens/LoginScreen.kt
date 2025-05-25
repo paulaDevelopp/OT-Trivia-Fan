@@ -16,6 +16,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -40,14 +41,25 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
+
         Image(
-            painter = painterResource(id = R.drawable.ot_background),
+            painter = painterResource(id = R.drawable.ot_sinlogo),
             contentDescription = "Fondo OT",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
+
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Título OTRIVIA FAN",
+            modifier = Modifier
+                .fillMaxWidth(0.99f)
+                .size(400.dp)
+        )
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -131,7 +143,17 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
                             .fillMaxWidth()
                             .background(Color.Transparent),
                         singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            val image = if (passwordVisible)
+                                painterResource(id = R.drawable.ic_eye_open)
+                            else
+                                painterResource(id = R.drawable.ic_eye_closed)
+
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(painter = image, contentDescription = "Mostrar/Ocultar contraseña", tint = Color.White)
+                            }
+                        },
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF2979FF),
@@ -144,6 +166,7 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
                             unfocusedContainerColor = Color.Transparent
                         )
                     )
+
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

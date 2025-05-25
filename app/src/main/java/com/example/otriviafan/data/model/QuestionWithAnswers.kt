@@ -7,7 +7,7 @@ data class QuestionWithAnswers(
     val id: Int = 0,
     val questionText: String = "",
     val correctAnswerId: Int = 0,
-    val imageUrl: String = "", // ✅ Este campo debe existir
+    val imageUrl: String = "",
     val answers: List<AnswerEntity> = emptyList()
 )
 {   constructor() : this(0, "", 0, "", emptyList())

@@ -27,7 +27,7 @@ fun SplashScreen(navController: NavController) {
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.splashscreen3d),
+            painter = painterResource(id = R.drawable.splashscreen_fondo),
             contentDescription = "OT SplashScreen",
             contentScale = ContentScale.Crop, // Asegura que la imagen cubra toda la pantalla sin dejar bordes
             modifier = Modifier.fillMaxSize()

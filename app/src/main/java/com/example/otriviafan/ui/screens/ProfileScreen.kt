@@ -109,12 +109,34 @@ fun ProfileScreen(navController: NavHostController) {
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Perfil", style = MaterialTheme.typography.headlineLarge, color = Color.White)
-                Spacer(Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0x80212121)),
+                    shape = MaterialTheme.shapes.medium,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "User Icon",
+                            tint = Color.White,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Perfil", style = MaterialTheme.typography.headlineSmall, color = Color.White)
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                Text("Correo: $email", style = MaterialTheme.typography.bodyLarge, color = Color.White)
-                Text("Puntos: $points", style = MaterialTheme.typography.bodyLarge, color = Color.White)
-                Text("Nivel máximo desbloqueado: $highestLevelUnlocked", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+                        Text("📧 $email", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+                        Text("⭐ Puntos: $points", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+                        Text("🏆 Nivel máximo: $highestLevelUnlocked", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+                    }
+                }
 
                 Spacer(Modifier.height(24.dp))
                 Divider(color = Color.White)
