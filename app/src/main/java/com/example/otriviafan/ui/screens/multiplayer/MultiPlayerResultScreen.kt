@@ -1,19 +1,26 @@
 package com.example.otriviafan.ui.screens.multiplayer
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.otriviafan.R
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.viewmodel.MatchViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
 import com.example.otriviafan.data.model.PuntosUsuario
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.delay
 
 @Composable
 fun MultiPlayerResultScreen(
@@ -32,48 +39,101 @@ fun MultiPlayerResultScreen(
         else -> "🤝 ¡Empate!"
     }
 
-    val scope = rememberCoroutineScope()
+    val pointsToAdd = when {
+        myScore > opponentScore -> 20
+        myScore == opponentScore -> 10
+        else -> 0
+    }
 
-    // ⚡ Guardar los puntos al entrar en esta pantalla
     LaunchedEffect(Unit) {
-        val pointsToAdd = when {
-            myScore > opponentScore -> 20
-            myScore == opponentScore -> 10
-            else -> 0
-        }
         if (pointsToAdd > 0) {
             savePointsForUser(pointsToAdd)
         }
+
+        // Espera unos segundos antes de volver automáticamente
+        delay(3000)
+
+        navController.navigate(Screen.LevelMap.route) {
+            popUpTo(Screen.LevelMap.route) { inclusive = true }
+            launchSingleTop = true
+        }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Partida finalizada", style = MaterialTheme.typography.headlineLarge)
-        Spacer(modifier = Modifier.height(24.dp))
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.fondo_store),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
 
-        Text("Tu puntuación: $myScore", style = MaterialTheme.typography.titleMedium)
-        Text("Oponente: $opponentScore", style = MaterialTheme.typography.titleMedium)
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f))
+        )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "🏁 Partida finalizada",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    color = Color.White,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            )
 
-        Text(resultText, style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(28.dp))
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                "⭐ Tu puntuación: $myScore",
+                color = Color(0xFFB3E5FC),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold
+            )
 
-        Button(onClick = {
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Home.route) { inclusive = true }
+            Text(
+                "👤 Oponente: $opponentScore",
+                color = Color.White,
+                fontSize = 20.sp
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = resultText,
+                color = when {
+                    myScore > opponentScore -> Color(0xFF81C784)
+                    myScore < opponentScore -> Color(0xFFEF5350)
+                    else -> Color(0xFFFFF176)
+                },
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (pointsToAdd > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "🔓 Has ganado +$pointsToAdd puntos",
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
             }
-        }) {
-            Text("Volver al inicio")
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CircularProgressIndicator(color = Color.White)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Volviendo al mapa...", color = Color.White, fontSize = 14.sp)
         }
     }
 }
+
 
 fun savePointsForUser(pointsToAdd: Int) {
     val currentUser = FirebaseAuth.getInstance().currentUser ?: return

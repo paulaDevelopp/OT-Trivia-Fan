@@ -50,11 +50,11 @@ fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
             modifier = Modifier.fillMaxSize()
         )
         Image(
-            painter = painterResource(id = R.drawable.logo),
+            painter = painterResource(id = R.drawable.logobrillante),
             contentDescription = "Título OTRIVIA FAN",
             modifier = Modifier
                 .fillMaxWidth(0.99f)
-                .size(400.dp)
+                .size(480.dp)
         )
         Box(
             modifier = Modifier

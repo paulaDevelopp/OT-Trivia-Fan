@@ -53,11 +53,11 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
         )
 
         Image(
-            painter = painterResource(id = R.drawable.logo),
+            painter = painterResource(id = R.drawable.logobrillante),
             contentDescription = "Título OTRIVIA FAN",
             modifier = Modifier
                 .fillMaxWidth(0.99f)
-                .size(400.dp)
+                .size(520.dp)
         )
 
         Box(

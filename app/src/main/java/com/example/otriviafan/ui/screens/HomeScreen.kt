@@ -1,5 +1,6 @@
 package com.example.otriviafan.ui.screens
 
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,6 +20,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -28,11 +30,27 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.otriviafan.R
 import com.example.otriviafan.navigation.Screen
-import com.example.otriviafan.ui.theme.FredokaFont
 import com.example.otriviafan.ui.theme.LuckiestGuyFont
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.tasks.await
 
 @Composable
 fun HomeScreen(navController: NavController) {
+    val context = LocalContext.current
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val database = FirebaseDatabase.getInstance().reference
+
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            val isNewUserSnapshot = database.child("users").child(uid).child("isNewUser").get().await()
+            val isNewUser = isNewUserSnapshot.getValue(Boolean::class.java) == true
+            if (isNewUser) {
+                Toast.makeText(context, "¡Bienvenido! Te regalamos 5 puntos de bienvenida🎉", Toast.LENGTH_LONG).show()
+                database.child("users").child(uid).child("isNewUser").setValue(false)
+            }
+        }
+    }
     Box(modifier = Modifier.fillMaxSize()) {
         // Fondo
         Image(
@@ -57,11 +75,11 @@ fun HomeScreen(navController: NavController) {
 
             // Logo
             Image(
-                painter = painterResource(id = R.drawable.logo),
+                painter = painterResource(id = R.drawable.logobrillante),
                 contentDescription = "Título OTRIVIA FAN",
                 modifier = Modifier
                     .fillMaxWidth(0.99f)
-                    .size(358.dp)
+                    .size(380.dp)
             )
 
             OTStyledButton(

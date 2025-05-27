@@ -16,7 +16,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun SplashScreen(navController: NavController) {
     LaunchedEffect(Unit) {
-        delay(1700)
+        delay(1900)
         navController.navigate(Screen.Login.route) {
             popUpTo(Screen.Splash.route) { inclusive = true }
         }
@@ -27,7 +27,7 @@ fun SplashScreen(navController: NavController) {
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.splashscreen_fondo),
+            painter = painterResource(id = R.drawable.splashscreen3d),
             contentDescription = "OT SplashScreen",
             contentScale = ContentScale.Crop, // Asegura que la imagen cubra toda la pantalla sin dejar bordes
             modifier = Modifier.fillMaxSize()

@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.otriviafan.data.Repository
 import com.example.otriviafan.data.model.WallpaperItem
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+
 class UserViewModel : ViewModel() {
 
     private val repository = Repository()
@@ -29,6 +31,23 @@ class UserViewModel : ViewModel() {
     private val _unlockedWallpapers = MutableStateFlow<List<String>>(emptyList())
     val unlockedWallpapers: StateFlow<List<String>> = _unlockedWallpapers
 
+    private val _savedWallpapers = MutableStateFlow<Set<String>>(emptySet())
+    val savedWallpapers: StateFlow<Set<String>> = _savedWallpapers
+
+    fun markWallpaperAsSaved(filename: String) {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            try {
+                val db = FirebaseDatabase.getInstance().reference
+                val savedRef = db.child("users").child(uid).child("savedWallpapers")
+                savedRef.child(filename).setValue(true).await()
+                _savedWallpapers.value = _savedWallpapers.value + filename
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     init {
         auth.currentUser?.uid?.let { loadUserDataFor(it) }
     }
@@ -37,12 +56,18 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             val userLevelName = repository.getUserLevel(uid)
             val allLevels = repository.getAllLevelNamesOrdered()
-            val levelIndex = allLevels.indexOf(userLevelName) + 1 // +1 porque los índices comienzan en 0
+            val levelIndex = allLevels.indexOf(userLevelName) + 1
             _highestLevelUnlocked.value = levelIndex
             _points.value = repository.getUserPoints(uid)
             _purchasedWallpapers.value = repository.getUserWallpaperPurchases(uid)
             _unlockedWallpapers.value = repository.getUnlockedWallpapers(uid)
             _availableWallpapers.value = loadAndSortWallpapersFor(uid)
+
+            // Cargar fondos guardados
+            val db = FirebaseDatabase.getInstance().reference
+            val savedSnapshot = db.child("users").child(uid).child("savedWallpapers").get().await()
+            val savedList = savedSnapshot.children.mapNotNull { it.key }.toSet()
+            _savedWallpapers.value = savedList
         }
     }
 
@@ -123,7 +148,6 @@ class UserViewModel : ViewModel() {
             _availableWallpapers.value = loadAndSortWallpapersFor(uid)
         }
     }
-
 
     fun getUserId(): String = auth.currentUser?.uid.orEmpty()
 

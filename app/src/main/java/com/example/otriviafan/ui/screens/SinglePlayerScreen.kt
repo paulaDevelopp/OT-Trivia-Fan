@@ -14,13 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.otriviafan.R
 import com.example.otriviafan.data.Repository
-//import com.example.otriviafan.data.api.RetrofitClient
 import com.example.otriviafan.navigation.Screen
 import com.example.otriviafan.ui.components.ConfettiAnimation
 import com.example.otriviafan.viewmodel.SinglePlayerViewModel
@@ -32,9 +33,7 @@ import kotlinx.coroutines.launch
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
 @Composable
 fun SinglePlayerScreen(navController: NavController, levelName: String) {
-    val viewModel: SinglePlayerViewModel = viewModel(
-        factory = SinglePlayerViewModelFactory(levelName)
-    )
+    val viewModel: SinglePlayerViewModel = viewModel(factory = SinglePlayerViewModelFactory(levelName))
     val userViewModel: UserViewModel = viewModel()
     val scope = rememberCoroutineScope()
 
@@ -67,9 +66,7 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
     }
 
     LaunchedEffect(outOfLives) {
-        if (outOfLives) {
-            canRetry = viewModel.canRetryWithPoints()
-        }
+        if (outOfLives) canRetry = viewModel.canRetryWithPoints()
     }
 
     LaunchedEffect(shouldRefresh) {
@@ -78,10 +75,9 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
             viewModel.setRefreshHandled()
         }
     }
+
     LaunchedEffect(levelCompleted) {
-        if (levelCompleted && !nivelSubido && !outOfLives) {
-            viewModel.finishLevel()
-        }
+        if (levelCompleted && !nivelSubido && !outOfLives) viewModel.finishLevel()
     }
 
     if (outOfLives) {
@@ -91,60 +87,27 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
                     viewModel.setLives(0)
                     delay(500)
                     val retried = viewModel.retryUsingPoints()
-                    if (!retried) {
-                        delay(300)
-                        navController.popBackStack()
-                    }
+                    if (!retried) navController.popBackStack()
                 }
             },
-            onExit = {
-                scope.launch {
-                    delay(300)
-                    navController.popBackStack()
-                }
-            },
+            onExit = { scope.launch { navController.popBackStack() } },
             canRetry = canRetry
         )
     }
 
     if (nivelSubido) {
-        if (partidaPerfecta) {
-            showConfetti = true
-        }
+        if (partidaPerfecta) showConfetti = true
 
-      /*  val dificultad = when {
-            levelName.startsWith("easy") -> "easy"
-            levelName.startsWith("medium") -> "medium"
-            levelName.startsWith("difficult") -> "difficult"
-            else -> "unknown"
-        }
-
-       scope.launch {
-            try {
-                //val response = RetrofitClient.instance.uploadWallpapers(dificultad)
-                if (response.isSuccessful) {
-                    println("Fondos subidos: ${response.body()?.difficulty}")
-                } else {
-                    println("Error de servidor: ${response.code()}")
-                }
-            } catch (e: Exception) {
-                println("Error en Retrofit: ${e.message}")
-            }
-        }
-^*/
-        scope.launch {
-            userViewModel.marcarNivelComoCompletado(levelName)
-        }
-
-        val mensaje = if (partidaPerfecta)
-            "¡Has hecho una partida perfecta! Respondiste correctamente todas las preguntas."
-        else
-            "Has completado el nivel. ¡Buen trabajo!"
+        scope.launch { userViewModel.marcarNivelComoCompletado(levelName) }
 
         AlertDialog(
             onDismissRequest = {},
             title = { Text("¡Subiste de Nivel!") },
-            text = { Text(mensaje) },
+            text = {
+                Text(
+                    if (partidaPerfecta) "¡Has hecho una partida perfecta!" else "Has completado el nivel. ¡Buen trabajo!"
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.clearFeedbackFlags()
@@ -197,77 +160,96 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
         )
 
         if (showConfetti) {
-            ConfettiAnimation(trigger = true) {
-                showConfetti = false
-            }
+            ConfettiAnimation(trigger = true) { showConfetti = false }
         }
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(verticalArrangement = Arrangement.Center) {
-                    Text("Puntos", color = Color.White, style = MaterialTheme.typography.labelSmall)
-                    Text("$score", color = Color(0xFFBB86FC), style = MaterialTheme.typography.titleLarge)
+                // Puntos y vidas
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Puntos:", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("$score", color = Color(0xFFBB86FC), fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
-
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(id = R.drawable.vida_extra),
                             contentDescription = "Vida extra",
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(36.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("x$lives", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                        Text("x$lives", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
 
-                Column(horizontalAlignment = Alignment.End) {
+                // Nivel y número de pregunta
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         "Nivel: ${levelName.replace("_", " ").replaceFirstChar { it.uppercase() }}",
                         color = Color.White,
-                        style = MaterialTheme.typography.titleMedium
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    Text("Pregunta ${currentQuestionIndex + 1} / ${questions.size}", color = Color.White.copy(alpha = 0.8f))
+                    Text(
+                        "Pregunta ${currentQuestionIndex + 1} / ${questions.size}",
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 18.sp
+                    )
                 }
 
+                // Pausa
                 IconButton(onClick = { showPauseDialog = true }) {
                     Icon(
                         painter = painterResource(id = R.drawable.pausa),
                         contentDescription = "Pausa",
-                        modifier = Modifier.size(52.dp), // Establece un tamaño razonable
-                        tint = Color.Unspecified // No intentes aplicar un tinte si es una imagen a color
+                        modifier = Modifier.size(48.dp),
+                        tint = Color.Unspecified
                     )
-
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (questions.isNotEmpty() && currentQuestionIndex < questions.size) {
                 val question = questions[currentQuestionIndex]
 
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE7F6)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp)
+                        .defaultMinSize(minHeight = 140.dp), // más grande
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp),
+                        modifier = Modifier
+                            .padding(24.dp)
+                            .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(question.questionText, color = Color.Black, style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            text = question.questionText,
+                            color = Color.Black,
+                            style = MaterialTheme.typography.headlineSmall,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 question.answers.forEach { answer ->
                     val isSelected = selectedAnswerId == answer.id
@@ -276,7 +258,7 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .padding(vertical = 8.dp)
+                            .padding(vertical = 12.dp)
                             .clickable(enabled = selectedAnswerId == null) {
                                 selectedAnswerId = answer.id
                                 val correct = answer.id == question.correctAnswerId
@@ -308,12 +290,13 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
                             text = answer.answerText,
                             color = Color.White,
                             fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
