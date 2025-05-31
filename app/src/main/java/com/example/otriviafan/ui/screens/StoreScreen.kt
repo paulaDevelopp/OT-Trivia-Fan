@@ -25,9 +25,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.otriviafan.R
+import com.example.otriviafan.ui.rememberResponsiveSizes
 import com.example.otriviafan.util.saveImageToGallery
 import com.example.otriviafan.viewmodel.StoreViewModel
 import com.example.otriviafan.viewmodel.UserViewModel
@@ -39,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, userViewModel: UserViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val sizes = rememberResponsiveSizes()
 
     val availableWallpapers by userViewModel.availableWallpapers.collectAsState()
     val unlockedWallpapers by userViewModel.unlockedWallpapers.collectAsState()
@@ -60,20 +61,20 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                 contentColor = Color.White
             ) {
                 NavigationBarItem(
-                    icon = { Text("🏠", fontSize = 20.sp) },
-                    label = { Text("Inicio", fontSize = 12.sp) },
+                    icon = { Text("🏠", fontSize = sizes.fontSizeMedium) },
+                    label = { Text("Inicio", fontSize = sizes.fontSizeSmall) },
                     selected = false,
                     onClick = { navController.navigate("home") }
                 )
                 NavigationBarItem(
-                    icon = { Text("🎮", fontSize = 20.sp) },
-                    label = { Text("Jugar", fontSize = 12.sp) },
+                    icon = { Text("🎮", fontSize = sizes.fontSizeMedium) },
+                    label = { Text("Jugar", fontSize = sizes.fontSizeSmall) },
                     selected = false,
                     onClick = { navController.navigate("level_map") }
                 )
                 NavigationBarItem(
-                    icon = { Text("👤", fontSize = 20.sp) },
-                    label = { Text("Perfil", fontSize = 12.sp) },
+                    icon = { Text("👤", fontSize = sizes.fontSizeMedium) },
+                    label = { Text("Perfil", fontSize = sizes.fontSizeSmall) },
                     selected = false,
                     onClick = { navController.navigate("profile") }
                 )
@@ -101,18 +102,18 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(sizes.spacingMedium),
+                        horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "Tienda de Fondos OT",
-                    fontSize = 26.sp,
+                    fontSize = sizes.fontSizeLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFFAFAFA),
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(sizes.spacingSmall))
 
                 Surface(
                     shape = RoundedCornerShape(30),
@@ -122,17 +123,17 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                     Text(
                         text = "Mis puntos: $userPoints",
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
-                        fontSize = 18.sp,
+                        fontSize = sizes.fontSizeMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF4A148C),
                         textAlign = TextAlign.Center
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(sizes.spacingMedium))
 
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(150.dp),
+                    columns = GridCells.Adaptive(sizes.screenWidth * 0.4f),
                     contentPadding = PaddingValues(8.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     horizontalArrangement = Arrangement.spacedBy(20.dp)
@@ -154,7 +155,7 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                             ) {
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier.size(120.dp).clip(RoundedCornerShape(12.dp))
+                                    modifier = Modifier.size(sizes.screenWidth * 0.3f).clip(RoundedCornerShape(12.dp))
                                 ) {
                                     Image(
                                         painter = rememberAsyncImagePainter(item.url),
@@ -169,7 +170,7 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                                             Text(
                                                 text = "Bloqueado",
                                                 color = Color.White,
-                                                fontSize = 12.sp,
+                                                fontSize = sizes.fontSizeSmall,
                                                 modifier = Modifier.padding(2.dp),
                                                 textAlign = TextAlign.Center
                                             )
@@ -177,7 +178,7 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(sizes.spacingSmall))
 
                                 if (isPurchased) {
                                     Button(
@@ -199,7 +200,7 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF66BB6A)),
                                         enabled = !isSaved
                                     ) {
-                                        Text(if (isSaved) "Guardado" else "Guardar", fontSize = 14.sp)
+                                        Text(if (isSaved) "Guardado" else "Guardar", fontSize = sizes.fontSizeSmall)
                                     }
                                 } else {
                                     Button(
@@ -215,7 +216,8 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                                         shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7E57C2))
                                     ) {
-                                        Text("Comprar: ${item.price} pts", fontSize = 14.sp)
+                                        Text("Comprar: ${item.price} pts", fontSize = 10.sp)
+
                                     }
                                 }
                             }
@@ -223,7 +225,7 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(sizes.spacingSmall))
 
                 errorMessage?.let { error ->
                     Snackbar(

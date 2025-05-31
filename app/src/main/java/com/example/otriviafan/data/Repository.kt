@@ -11,6 +11,7 @@ import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 
 class Repository {
@@ -68,8 +69,10 @@ class Repository {
             val initialData = mapOf(
                 "email" to email,
                 "highestLevelUnlocked" to 1,
-                "usedRetryPerLevel" to mapOf<String, Boolean>()
+                "usedRetryPerLevel" to mapOf<String, Boolean>(),
+                "isNewUser" to true
             )
+
             userRef.setValue(initialData).await()
 
             // Agrega los puntos iniciales de regalo correctamente en el nodo "puntos"
@@ -477,15 +480,16 @@ class Repository {
     //Crea un nodo en Firebase
     suspend fun createMatchWithQuestions(playerId: String, levelName: String, questions: List<QuestionWithAnswers>): String {
         val matchId = realtimeDb.child("matches").push().key ?: return ""
-
+        val now = System.currentTimeMillis()
         val match = Match(
             matchId = matchId,
             player1Id = playerId,
             questions = questions,
             answered = mapOf(playerId to false),
             status = "waiting",
-            difficulty = "", // puedes asignar dificultad desde el nombre si lo necesitas
-            levelName = levelName // actualiza el modelo Match para usar String
+            difficulty = "",
+            levelName = levelName,
+            lastActive = mapOf(playerId to now)
         )
 
         realtimeDb.child("matches").child(matchId).setValue(match).await()
@@ -494,17 +498,20 @@ class Repository {
 
 
     suspend fun joinOrCreateMatch(playerId: String, context: Context, levelName: String): String {
-        val matchesSnapshot = realtimeDb.child("matches").get().await()
+        val query = realtimeDb.child("matches")
+            .orderByChild("status")
+            .equalTo("waiting")
+        val matchesSnapshot = query.get().await()
+
+        delay(300) // Para mitigar condiciones de carrera simples
 
         for (matchSnap in matchesSnapshot.children) {
             val match = matchSnap.getValue(Match::class.java)
 
-            if (
-                match != null &&
-                match.status == "waiting" &&
+            if (match != null &&
                 match.player1Id != playerId &&
                 match.player2Id.isNullOrEmpty() &&
-                match.levelName.trim() == levelName.trim() // para evitar errores de espacios
+                match.levelName.trim() == levelName.trim()
             ) {
                 val matchId = match.matchId
                 val updatedMatch = match.copy(
@@ -518,6 +525,7 @@ class Repository {
             }
         }
 
+        // Si no se encontró una partida válida, crea una nueva
         val questions = getQuestionsForMultiplayerLevel(levelName)
         return createMatchWithQuestions(playerId, levelName, questions)
     }
@@ -532,6 +540,10 @@ class Repository {
 
             override fun onCancelled(error: DatabaseError) {}
         })
+    }
+    fun updateLastActive(matchId: String, userId: String) {
+        val now = System.currentTimeMillis()
+        realtimeDb.child("matches").child(matchId).child("lastActive").child(userId).setValue(now)
     }
 
     /*Marca al jugador como que respondió.
@@ -581,6 +593,31 @@ class Repository {
             override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {}
         })
     }
+
+    suspend fun finishMatchDueToInactivity(matchId: String, player1Score: Int, player2Score: Int) {
+        val matchRef = FirebaseDatabase.getInstance().reference.child("matches").child(matchId)
+
+        val updatedData = mapOf(
+            "player1Score" to player1Score,
+            "player2Score" to player2Score,
+            "status" to "finished"
+        )
+
+        matchRef.updateChildren(updatedData).await()
+    }
+    suspend fun abandonMatch(matchId: String) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val matchRef = FirebaseDatabase.getInstance().reference.child("matches").child(matchId)
+        val update = mapOf(
+            "player1Score" to 0,
+            "player2Score" to 0,
+            "status" to "finished",
+            "abandonedBy" to userId
+        )
+        matchRef.updateChildren(update).await()
+    }
+
+
 
   /*  suspend fun updatePlayerScore(matchId: String, userId: String, newScore: Int) {
         val matchSnapshot = realtimeDb.child("matches").child(matchId).get().await()

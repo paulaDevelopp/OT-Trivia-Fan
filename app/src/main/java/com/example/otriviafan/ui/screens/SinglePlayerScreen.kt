@@ -1,21 +1,29 @@
 package com.example.otriviafan.ui.screens
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -78,6 +86,10 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
 
     LaunchedEffect(levelCompleted) {
         if (levelCompleted && !nivelSubido && !outOfLives) viewModel.finishLevel()
+    }
+// Limpiar selección al cambiar de pregunta
+    LaunchedEffect(currentQuestionIndex) {
+        selectedAnswerId = null
     }
 
     if (outOfLives) {
@@ -198,7 +210,7 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
                     Text(
                         "Nivel: ${levelName.replace("_", " ").replaceFirstChar { it.uppercase() }}",
                         color = Color.White,
-                        fontSize = 22.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
@@ -228,80 +240,109 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp)
-                        .defaultMinSize(minHeight = 140.dp), // más grande
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                        .padding(vertical = 7.dp)
+                        .wrapContentHeight(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFD1C4E9)), // Lila suave
+                    elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Column(
                         modifier = Modifier
-                            .padding(24.dp)
+                            .padding(16.dp)
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = question.questionText,
                             color = Color.Black,
-                            style = MaterialTheme.typography.headlineSmall,
-                            textAlign = TextAlign.Center
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
+
                     }
                 }
+
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 question.answers.forEach { answer ->
                     val isSelected = selectedAnswerId == answer.id
                     val isCorrect = isSelected && answer.id == question.correctAnswerId
+                    val isIncorrect = isSelected && answer.id != question.correctAnswerId
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                    val shape = RoundedCornerShape(40)
+
+                    val backgroundBrush = when {
+                        isCorrect -> Brush.verticalGradient(listOf(Color(0xFF81C784), Color(0xFF388E3C))) // Verde
+                        isIncorrect -> Brush.verticalGradient(listOf(Color(0xFFEF5350), Color(0xFFC62828))) // Rojo
+                        else -> Brush.verticalGradient(listOf(Color(0xFF4FC3F7), Color(0xFF0288D1))) // Azul
+                    }
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .padding(vertical = 12.dp)
+                            .shadow(10.dp, shape)
+                            .clip(shape)
+                            .background(brush = backgroundBrush)
                             .clickable(enabled = selectedAnswerId == null) {
                                 selectedAnswerId = answer.id
                                 val correct = answer.id == question.correctAnswerId
-                                if (correct) {
-                                    showConfetti = true
-                                    viewModel.submitAnswer(true)
-                                } else {
-                                    viewModel.submitAnswer(false)
-                                }
+                                if (correct) showConfetti = true
+
                                 scope.launch {
-                                    delay(1000)
-                                    selectedAnswerId = null
+                                    delay(1500) // Tiempo para mostrar color
+                                    viewModel.submitAnswer(correct)
                                 }
                             }
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(70.dp)
-                                .background(
-                                    color = if (isCorrect) Color(0xFFBA68C8).copy(alpha = 0.5f) else Color.Transparent,
-                                    shape = RoundedCornerShape(50)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.estrella),
-                                contentDescription = answer.answerText,
-                                modifier = Modifier.size(70.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
+                            .fillMaxWidth()
+                            .height(65.dp)
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ){
                         Text(
                             text = answer.answerText,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
                             color = Color.White,
-                            fontSize = 20.sp,
                             textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyMedium
+                            modifier = Modifier.padding(horizontal = 12.dp)
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
     }
+}
+
+@Composable
+fun OutOfLivesDialog(
+    onRetry: () -> Unit,
+    onExit: () -> Unit,
+    canRetry: Boolean
+) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text("¡Te has quedado sin vidas!") },
+        text = {
+            if (canRetry) {
+                Text("¿Quieres usar 5 puntos para continuar?")
+            } else {
+                Text("No tienes suficientes puntos para continuar.")
+            }
+        },
+        confirmButton = {
+            if (canRetry) {
+                TextButton(onClick = onRetry) {
+                    Text("Reintentar")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onExit) {
+                Text("Salir")
+            }
+        }
+    )
 }

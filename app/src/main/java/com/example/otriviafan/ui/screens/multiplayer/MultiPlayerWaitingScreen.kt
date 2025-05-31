@@ -17,9 +17,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.otriviafan.R
 import com.example.otriviafan.navigation.Screen
+import com.example.otriviafan.ui.rememberResponsiveSizes
 import com.example.otriviafan.viewmodel.MatchViewModel
 import com.google.firebase.auth.FirebaseAuth
-
 @Composable
 fun MultiPlayerWaitingScreen(
     navController: NavController,
@@ -29,6 +29,7 @@ fun MultiPlayerWaitingScreen(
     val match = matchViewModel.match.collectAsState().value
     val context = LocalContext.current
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    val sizes = rememberResponsiveSizes()
 
     // Crear partida al iniciar
     LaunchedEffect(Unit) {
@@ -46,7 +47,7 @@ fun MultiPlayerWaitingScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.fondo_store), // Usa el fondo que desees
+            painter = painterResource(id = R.drawable.fondo_store),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -61,28 +62,29 @@ fun MultiPlayerWaitingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(horizontal = sizes.screenWidth * 0.08f),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 "👥 Esperando a otro jugador...",
-                style = MaterialTheme.typography.headlineSmall,
+                fontSize = sizes.fontSizeLarge,
                 color = Color.White,
-                fontSize = 24.sp
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text("Código de partida:", color = Color.White, fontSize = 16.sp)
-            Text(
-                text = match?.matchId ?: "Cargando...",
-                color = Color(0xFFBBDEFB),
-                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(sizes.screenHeight * 0.03f))
+
+            Text("Código de partida:", color = Color.White, fontSize = sizes.fontSizeSmall)
+
+            Text(
+                text = match?.matchId ?: "Cargando...",
+                color = Color(0xFFBBDEFB),
+                fontSize = sizes.fontSizeMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(sizes.screenHeight * 0.05f))
 
             CircularProgressIndicator(color = Color.White)
         }

@@ -16,7 +16,7 @@ sealed class Screen(val route: String) {
     object MultiPlayerWaiting : Screen("multiplayer_waiting")
     object MultiPlayerJoin : Screen("multiplayer_join")
     object MultiPlayerGame : Screen("multiplayer_game")
-   // object MultiPlayerResult : Screen("multiplayer_result")
+    object MultiPlayerResult : Screen("multiplayer_result")
 
     // Tienda
     object Store : Screen("store")

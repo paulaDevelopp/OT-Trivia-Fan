@@ -98,6 +98,10 @@ fun AppNavigation(navController: NavHostController) {
             MultiPlayerGameScreen(navController, matchViewModel)
         }
 
+        composable(Screen.MultiPlayerResult.route) {
+            MultiPlayerResultScreen(navController = navController, matchViewModel = matchViewModel)
+        }
+
         // Tienda
         composable(Screen.Store.route) {
             StoreScreen(

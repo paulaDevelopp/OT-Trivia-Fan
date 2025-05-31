@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.otriviafan.data.Repository
 import com.example.otriviafan.data.model.Match
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,17 +23,18 @@ class MatchViewModel(private val repository: Repository) : ViewModel() {
 
     fun createMatch(userId: String, context: Context, levelName: String) {
         viewModelScope.launch {
-            // Obtener preguntas para el nivel (ahora por nombre)
             val questions = repository.getQuestionsForMultiplayerLevel(levelName)
-            // Crear nueva partida
             val matchId = repository.createMatchWithQuestions(userId, levelName, questions)
 
-            // Suscribirse a los cambios
+            // Espera pequeña antes de empezar a escuchar (para asegurar persistencia en Firebase)
+            delay(500)
+
             repository.observeMatch(matchId) { updated ->
                 handleMatchUpdate(updated)
             }
         }
     }
+
 
     fun joinMatch(userId: String, context: Context, levelName: String) {
         viewModelScope.launch {

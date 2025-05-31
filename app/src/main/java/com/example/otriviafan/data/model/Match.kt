@@ -15,7 +15,8 @@ data class Match(
     var questions: List<QuestionWithAnswers> = emptyList(),
     var status: String = "waiting",
     var difficulty: String = "",
-    var levelName: String = ""
+    var levelName: String = "",
+    val lastActive: Map<String, Long> = emptyMap()
 ) {
     constructor() : this("", "", null, 0, 0, 0, null, emptyMap(), emptyList(), "waiting", "", "")
 }

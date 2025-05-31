@@ -25,12 +25,14 @@ import com.example.otriviafan.R
 import com.example.otriviafan.viewmodel.UserViewModel
 import kotlinx.coroutines.tasks.await
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.otriviafan.ui.rememberResponsiveSizes
 
 @Composable
 fun ProfileScreen(navController: NavHostController) {
     val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
     val uid = auth.currentUser?.uid
     val viewModel: UserViewModel = viewModel()
+    val sizes = rememberResponsiveSizes() // ✅ Responsive sizes
 
     LaunchedEffect(Unit) {
         viewModel.refreshUserData()
@@ -43,7 +45,6 @@ fun ProfileScreen(navController: NavHostController) {
     val purchasedWallpapers by viewModel.purchasedWallpapers.collectAsState()
     val availableWallpapers by viewModel.availableWallpapers.collectAsState()
     val unlockedWallpapers by viewModel.unlockedWallpapers.collectAsState()
-
     val savedWallpapers by viewModel.savedWallpapers.collectAsState()
 
     val savedImages = availableWallpapers.filter {
@@ -67,20 +68,20 @@ fun ProfileScreen(navController: NavHostController) {
         bottomBar = {
             NavigationBar(containerColor = Color(0xFF80D8FF)) {
                 NavigationBarItem(
-                    icon = { Text("🏠", fontSize = 20.sp) },
-                    label = { Text("Inicio", fontSize = 12.sp) },
+                    icon = { Text("🏠", fontSize = sizes.fontSizeMedium) },
+                    label = { Text("Inicio", fontSize = sizes.fontSizeSmall) },
                     selected = false,
                     onClick = { navController.navigate("home") }
                 )
                 NavigationBarItem(
-                    icon = { Text("🎮", fontSize = 20.sp) },
-                    label = { Text("Jugar", fontSize = 12.sp) },
+                    icon = { Text("🎮", fontSize = sizes.fontSizeMedium) },
+                    label = { Text("Jugar", fontSize = sizes.fontSizeSmall) },
                     selected = false,
                     onClick = { navController.navigate("level_map") }
                 )
                 NavigationBarItem(
-                    icon = { Text("🛍️", fontSize = 20.sp) },
-                    label = { Text("Tienda", fontSize = 12.sp) },
+                    icon = { Text("🛍️", fontSize = sizes.fontSizeMedium) },
+                    label = { Text("Tienda", fontSize = sizes.fontSizeSmall) },
                     selected = false,
                     onClick = { navController.navigate("store") }
                 )
@@ -92,7 +93,6 @@ fun ProfileScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Fondo
             Image(
                 painter = painterResource(id = R.drawable.ot_sinlogo),
                 contentDescription = null,
@@ -128,16 +128,16 @@ fun ProfileScreen(navController: NavHostController) {
                             imageVector = Icons.Default.Person,
                             contentDescription = "User Icon",
                             tint = Color.White,
-                            modifier = Modifier.size(64.dp)
+                            modifier = Modifier.size(sizes.screenWidth * 0.15f)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Perfil", style = MaterialTheme.typography.headlineSmall, color = Color.White)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text("📧 $email", style = MaterialTheme.typography.bodyLarge, color = Color.White)
-                        Text("🏆 Nivel: $highestLevelUnlocked", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+                        Spacer(modifier = Modifier.height(sizes.screenHeight * 0.01f))
+                        Text("Perfil", fontSize = sizes.fontSizeLarge, color = Color.White)
+                        Spacer(modifier = Modifier.height(sizes.screenHeight * 0.015f))
+                        Text("📧 $email", fontSize = sizes.fontSizeSmall, color = Color.White)
+                        Text("🏆 Nivel: $highestLevelUnlocked", fontSize = sizes.fontSizeSmall, color = Color.White)
                         Text(
                             text = "⭐ Puntos: $points",
-                            fontSize = 22.sp,
+                            fontSize = sizes.fontSizeMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFFFEB3B),
                             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
@@ -145,19 +145,19 @@ fun ProfileScreen(navController: NavHostController) {
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(sizes.screenHeight * 0.03f))
                 Divider(color = Color.White.copy(alpha = 0.6f), thickness = 1.dp)
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(sizes.screenHeight * 0.02f))
 
-                Text("Fondos guardados en galería", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                Spacer(modifier = Modifier.height(12.dp))
+                Text("Fondos guardados en galería", fontSize = sizes.fontSizeMedium, color = Color.White)
+                Spacer(modifier = Modifier.height(sizes.screenHeight * 0.015f))
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     contentPadding = PaddingValues(8.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
+                        .height(sizes.screenHeight * 0.4f)
                 ) {
                     items(savedImages) { bg ->
                         Card(
@@ -178,7 +178,7 @@ fun ProfileScreen(navController: NavHostController) {
                                 Text(
                                     text = "📥 Guardado",
                                     color = Color.White,
-                                    fontSize = 12.sp,
+                                    fontSize = sizes.fontSizeSmall,
                                     modifier = Modifier
                                         .align(Alignment.BottomCenter)
                                         .background(Color.Black.copy(alpha = 0.5f))

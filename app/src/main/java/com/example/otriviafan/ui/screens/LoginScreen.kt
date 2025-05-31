@@ -1,4 +1,3 @@
-
 package com.example.otriviafan.ui.screens
 
 import android.widget.Toast
@@ -23,6 +22,7 @@ import androidx.navigation.NavController
 import com.example.otriviafan.R
 import com.example.otriviafan.data.Repository
 import com.example.otriviafan.navigation.Screen
+import com.example.otriviafan.ui.rememberResponsiveSizes
 import com.example.otriviafan.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -37,6 +37,7 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
     val repository = remember { Repository() }
+    val sizes = rememberResponsiveSizes()
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -57,7 +58,7 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
             contentDescription = "Título OTRIVIA FAN",
             modifier = Modifier
                 .fillMaxWidth(0.99f)
-                .size(520.dp)
+                .size(sizes.screenHeight * 0.6f)
         )
 
         Box(
@@ -77,7 +78,7 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
                         Text(
                             text = "I N I C I O    D E    S E S I Ó N",
                             color = Color.White,
-                            fontSize = 20.sp,
+                            fontSize = sizes.fontSizeMedium,
                             style = MaterialTheme.typography.headlineSmall
                         )
                     }
@@ -94,11 +95,11 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
+                    .padding(sizes.screenWidth * 0.06f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.weight(2f))
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(sizes.screenHeight * 0.03f))
 
                 Box(
                     modifier = Modifier
@@ -166,12 +167,12 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
                             unfocusedContainerColor = Color.Transparent
                         )
                     )
-
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
-                    onClick = { isLoading = true
+                    onClick = {
+                        isLoading = true
                         auth.signInWithEmailAndPassword(email, password)
                             .addOnCompleteListener { task ->
                                 isLoading = false
@@ -212,7 +213,7 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
                     enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
+                        .height(sizes.buttonHeight),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF2979FF),
                         contentColor = Color.White
@@ -223,14 +224,14 @@ fun LoginScreen(navController: NavController, userViewModel: UserViewModel) {
                     if (isLoading) {
                         CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
                     } else {
-                        Text("Iniciar sesión")
+                        Text("Iniciar sesión", fontSize = sizes.fontSizeMedium)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
-                    Text("¿No tienes cuenta aún? Regístrate", color = Color.White)
+                    Text("¿No tienes cuenta aún? Regístrate", color = Color.White, fontSize = sizes.fontSizeSmall)
                 }
                 Spacer(modifier = Modifier.weight(1f))
             }

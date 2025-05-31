@@ -11,14 +11,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.otriviafan.R
+import com.example.otriviafan.data.model.PuntosUsuario
 import com.example.otriviafan.navigation.Screen
+import com.example.otriviafan.ui.rememberResponsiveSizes
 import com.example.otriviafan.viewmodel.MatchViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.example.otriviafan.data.model.PuntosUsuario
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.delay
 
@@ -29,17 +28,20 @@ fun MultiPlayerResultScreen(
 ) {
     val match = matchViewModel.match.collectAsState().value ?: return
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    val responsive = rememberResponsiveSizes()
 
     val myScore = if (uid == match.player1Id) match.player1Score else match.player2Score
     val opponentScore = if (uid == match.player1Id) match.player2Score else match.player1Score
 
     val resultText = when {
+        match.player1Score == 0 && match.player2Score == 0 -> "⚠ El rival abandonó la partida. Nadie ganó puntos."
         myScore > opponentScore -> "🎉 ¡Ganaste la partida!"
         myScore < opponentScore -> "😓 Perdiste... ¡la próxima será!"
         else -> "🤝 ¡Empate!"
     }
 
     val pointsToAdd = when {
+        match.player1Score == 0 && match.player2Score == 0 -> 0
         myScore > opponentScore -> 20
         myScore == opponentScore -> 10
         else -> 0
@@ -49,10 +51,7 @@ fun MultiPlayerResultScreen(
         if (pointsToAdd > 0) {
             savePointsForUser(pointsToAdd)
         }
-
-        // Espera unos segundos antes de volver automáticamente
         delay(3000)
-
         navController.navigate(Screen.LevelMap.route) {
             popUpTo(Screen.LevelMap.route) { inclusive = true }
             launchSingleTop = true
@@ -76,34 +75,33 @@ fun MultiPlayerResultScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(responsive.screenWidth * 0.08f),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 "🏁 Partida finalizada",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    color = Color.White,
-                    fontWeight = FontWeight.ExtraBold
-                )
+                fontSize = responsive.fontSizeLarge,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(responsive.screenHeight * 0.04f))
 
             Text(
                 "⭐ Tu puntuación: $myScore",
                 color = Color(0xFFB3E5FC),
-                fontSize = 22.sp,
+                fontSize = responsive.fontSizeMedium,
                 fontWeight = FontWeight.Bold
             )
 
             Text(
                 "👤 Oponente: $opponentScore",
                 color = Color.White,
-                fontSize = 20.sp
+                fontSize = responsive.fontSizeSmall
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(responsive.screenHeight * 0.03f))
 
             Text(
                 text = resultText,
@@ -112,28 +110,27 @@ fun MultiPlayerResultScreen(
                     myScore < opponentScore -> Color(0xFFEF5350)
                     else -> Color(0xFFFFF176)
                 },
-                fontSize = 24.sp,
+                fontSize = responsive.fontSizeMedium,
                 fontWeight = FontWeight.Bold
             )
 
             if (pointsToAdd > 0) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(responsive.screenHeight * 0.015f))
                 Text(
                     "🔓 Has ganado +$pointsToAdd puntos",
                     color = Color.White,
-                    fontSize = 16.sp
+                    fontSize = responsive.fontSizeSmall
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(responsive.screenHeight * 0.025f))
 
             CircularProgressIndicator(color = Color.White)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Volviendo al mapa...", color = Color.White, fontSize = 14.sp)
+            Spacer(modifier = Modifier.height(responsive.screenHeight * 0.01f))
+            Text("Volviendo al mapa...", color = Color.White, fontSize = responsive.fontSizeSmall)
         }
     }
 }
-
 
 fun savePointsForUser(pointsToAdd: Int) {
     val currentUser = FirebaseAuth.getInstance().currentUser ?: return

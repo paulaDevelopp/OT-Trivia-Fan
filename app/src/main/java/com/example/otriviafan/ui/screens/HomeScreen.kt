@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.otriviafan.R
 import com.example.otriviafan.navigation.Screen
+import com.example.otriviafan.ui.rememberResponsiveSizes
 import com.example.otriviafan.ui.theme.LuckiestGuyFont
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -40,19 +41,20 @@ fun HomeScreen(navController: NavController) {
     val context = LocalContext.current
     val uid = FirebaseAuth.getInstance().currentUser?.uid
     val database = FirebaseDatabase.getInstance().reference
+    val sizes = rememberResponsiveSizes()
 
     LaunchedEffect(uid) {
         if (uid != null) {
             val isNewUserSnapshot = database.child("users").child(uid).child("isNewUser").get().await()
             val isNewUser = isNewUserSnapshot.getValue(Boolean::class.java) == true
             if (isNewUser) {
-                Toast.makeText(context, "¡Bienvenido! Te regalamos 5 puntos de bienvenida🎉", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Te regalamos 5 puntos de bienvenida🎉", Toast.LENGTH_LONG).show()
                 database.child("users").child(uid).child("isNewUser").setValue(false)
             }
         }
     }
+
     Box(modifier = Modifier.fillMaxSize()) {
-        // Fondo
         Image(
             painter = painterResource(id = R.drawable.fondo__home),
             contentDescription = "Fondo home",
@@ -68,38 +70,43 @@ fun HomeScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp, vertical = 10.dp),
+                .padding(horizontal = sizes.screenWidth * 0.08f, vertical = sizes.screenHeight * 0.01f),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
-
-            // Logo
             Image(
                 painter = painterResource(id = R.drawable.logobrillante),
                 contentDescription = "Título OTRIVIA FAN",
                 modifier = Modifier
-                    .fillMaxWidth(0.99f)
-                    .size(380.dp)
+                    .fillMaxWidth()
+                    .size(sizes.screenHeight * 0.42f)
             )
 
             OTStyledButton(
                 label = "🎯 J U G A R",
-                height = 100.dp,
-                fontSize = 40.sp
+                height = sizes.screenHeight * 0.12f,
+                fontSize = sizes.fontSizeLarge
             ) { navController.navigate(Screen.LevelMap.route) }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(sizes.screenHeight * 0.01f))
+
             OTStyledButton(
-                label = "🛍️ T I E N D A"
+                label = "🛍️ T I E N D A",
+                height = sizes.buttonHeight,
+                fontSize = sizes.fontSizeMedium
             ) { navController.navigate(Screen.Store.route) }
 
             OTStyledButton(
-                label = "👤 M I   P E R F I L"
+                label = "👤 M I   P E R F I L",
+                height = sizes.buttonHeight,
+                fontSize = sizes.fontSizeMedium
             ) { navController.navigate(Screen.Profile.route) }
-            Spacer(modifier = Modifier.height(70.dp))
+
+            Spacer(modifier = Modifier.height(sizes.screenHeight * 0.08f))
         }
     }
 }
+
 
 @Composable
 fun OTStyledButton(
