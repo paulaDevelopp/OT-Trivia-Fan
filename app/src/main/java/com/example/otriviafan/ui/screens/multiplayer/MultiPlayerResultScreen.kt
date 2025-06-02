@@ -34,10 +34,11 @@ fun MultiPlayerResultScreen(
     val opponentScore = if (uid == match.player1Id) match.player2Score else match.player1Score
 
     val resultText = when {
-        match.player1Score == 0 && match.player2Score == 0 -> "⚠ El rival abandonó la partida. Nadie ganó puntos."
+        match.player1Score == 0 && match.player2Score == 0 -> "⚠ Se abandonó la partida. " +
+                "Nadie ganó puntos."
         myScore > opponentScore -> "🎉 ¡Ganaste la partida!"
         myScore < opponentScore -> "😓 Perdiste... ¡la próxima será!"
-        else -> "🤝 ¡Empate!"
+        else -> "🤝 ¡Empate! Pasas al siguiente nivel."
     }
 
     val pointsToAdd = when {
