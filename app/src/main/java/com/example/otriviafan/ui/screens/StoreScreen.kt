@@ -216,7 +216,7 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                                         shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7E57C2))
                                     ) {
-                                        Text("Comprar: ${item.price} pts", fontSize = 10.sp)
+                                        Text("Comprar: ${item.price} pts", fontSize = 13.sp)
 
                                     }
                                 }

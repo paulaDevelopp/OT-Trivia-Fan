@@ -46,6 +46,7 @@ fun ProfileScreen(navController: NavHostController) {
     val availableWallpapers by viewModel.availableWallpapers.collectAsState()
     val unlockedWallpapers by viewModel.unlockedWallpapers.collectAsState()
     val savedWallpapers by viewModel.savedWallpapers.collectAsState()
+    var nivelActual = highestLevelUnlocked +1
 
     val savedImages = availableWallpapers.filter {
         savedWallpapers.contains(it.filename)
@@ -134,7 +135,7 @@ fun ProfileScreen(navController: NavHostController) {
                         Text("Perfil", fontSize = sizes.fontSizeLarge, color = Color.White)
                         Spacer(modifier = Modifier.height(sizes.screenHeight * 0.015f))
                         Text("📧 $email", fontSize = sizes.fontSizeSmall, color = Color.White)
-                        Text("🏆 Nivel: $highestLevelUnlocked", fontSize = sizes.fontSizeSmall, color = Color.White)
+                        Text("🏆 Nivel Actual: $nivelActual ", fontSize = sizes.fontSizeSmall, color = Color.White)
                         Text(
                             text = "⭐ Puntos: $points",
                             fontSize = sizes.fontSizeMedium,

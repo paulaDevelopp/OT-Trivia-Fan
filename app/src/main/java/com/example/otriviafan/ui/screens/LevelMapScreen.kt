@@ -17,10 +17,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +32,7 @@ import com.example.otriviafan.data.Repository
 import com.example.otriviafan.data.model.NivelUI
 import com.example.otriviafan.data.model.TipoNivel
 import com.example.otriviafan.navigation.Screen
+import com.example.otriviafan.ui.rememberResponsiveSizes
 import com.example.otriviafan.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 
@@ -219,11 +222,11 @@ fun BottomNavigationBar(navController: NavController) {
             onClick = { navController.navigate("profile") }
         )
     }
-}
-@OptIn(ExperimentalFoundationApi::class)
+}@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HelpOverlay(onDismiss: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { 2 })
+    val sizes = rememberResponsiveSizes()
 
     Box(
         modifier = Modifier
@@ -233,83 +236,89 @@ fun HelpOverlay(onDismiss: () -> Unit) {
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .height(420.dp),
+                .fillMaxWidth(0.92f)
+                .height(sizes.screenHeight * 0.50f),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(sizes.spacingMedium)
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "¿Cómo se juega a OTRIVIA FAN?",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = sizes.fontSizeLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0D47A1),
+                    textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(sizes.spacingSmall))
 
                 HorizontalPager(state = pagerState) { page ->
-                    when (page) {
-                        0 -> Text(
-                            text = """
+                    Text(
+                        text = when (page) {
+                            0 -> """
 🎯 Modo Individual:
+✅ Juega solo y responde preguntas.
+🔓 Desbloquea niveles.
+❤️ Pierdes vidas al fallar.
+🏆 ¡Haz partidas perfectas!
+""".trimIndent()
 
-✅ 1. Juega solo, sin presión.
-🎯 2. Responde preguntas para sumar puntos.
-🔓 3. Desbloquea niveles uno a uno.
-❤️ 4. Pierdes vidas al fallar.
-🔁 5. Usa puntos para reintentar.
-🏆 6. ¡Haz partidas perfectas y gana recompensas!
-                            """.trimIndent(),
-                            fontSize = 16.sp
-                        )
-                        1 -> Text(
-                            text = """
+                            1 -> """
 🤝 Modo Multijugador:
+👥 Juega contra otro usuario.
+⚡ El más rápido gana puntos.
+🎁 Gana recompensas por ganar o empatar.
+""".trimIndent()
 
-👥 1. Juega en tiempo real contra otro usuario.
-⚡ 2. El primero en responder gana el punto.
-📊 3. Se lleva la victoria quien acumule más puntos.
-🔥 4. Agilidad y precisión son clave.
-🎁 5. Gana recompensas si ganas o empatas.
-                            """.trimIndent(),
-                            fontSize = 16.sp
-                        )
-                    }
+                            else -> ""
+                        },
+                        fontSize = sizes.fontSizeMedium,
+                        color = Color.DarkGray,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier
+                            .padding(vertical = sizes.spacingSmall)
+                            .fillMaxWidth()
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(sizes.spacingSmall))
 
-                Text("⬅️ Desliza para ver más ➡️", fontSize = 14.sp, color = Color.Gray)
+                Text(
+                    text = "⬅️ Desliza para ver más ➡️",
+                    fontSize = sizes.fontSizeSmall,
+                    color = Color.Gray
+                )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(sizes.spacingSmall))
 
                 Row(horizontalArrangement = Arrangement.Center) {
                     repeat(2) { index ->
                         val selected = pagerState.currentPage == index
                         Box(
                             modifier = Modifier
-                                .size(10.dp)
+                                .size(if (selected) 12.dp else 8.dp)
                                 .padding(4.dp)
+                                .clip(CircleShape)
                                 .background(
-                                    color = if (selected) Color(0xFF80D8FF) else Color.Gray,
-                                    shape = CircleShape
+                                    color = if (selected) Color(0xFF80D8FF) else Color.LightGray
                                 )
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(sizes.spacingMedium))
 
                 Button(
                     onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF80D8FF))
+                    modifier = Modifier.fillMaxWidth(0.6f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF039BE5))
                 ) {
-                    Text("Cerrar", color = Color.White)
+                    Text("Cerrar", color = Color.White, fontSize = sizes.fontSizeMedium)
                 }
             }
         }

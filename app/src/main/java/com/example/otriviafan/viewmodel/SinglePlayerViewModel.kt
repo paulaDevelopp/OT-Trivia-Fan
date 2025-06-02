@@ -153,6 +153,14 @@ class SinglePlayerViewModel(
             usedQuestionIds.clear()
         }
     }
+    fun goToNextQuestion() {
+        if (_currentQuestionIndex.value + 1 >= _questions.value.size)
+         {
+            _levelCompleted.value = true
+        } else {
+            _currentQuestionIndex.value += 1
+        }
+    }
 
     suspend fun retryUsingPoints(): Boolean {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return false
