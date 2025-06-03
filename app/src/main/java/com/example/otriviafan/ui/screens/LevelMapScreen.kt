@@ -139,7 +139,7 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
             )
 
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                Box(modifier = Modifier.height(1500.dp)) {
+                Box(modifier = Modifier.height((niveles.size * 140).dp)) {
                     Image(
                         painter = painterResource(id = R.drawable.camino),
                         contentDescription = null,
@@ -147,13 +147,19 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
                         modifier = Modifier.fillMaxSize()
                     )
 
-                    val posiciones = listOf(
+                 /*   val posiciones = listOf(
                         DpOffset(140.dp, 80.dp), DpOffset(90.dp, 200.dp),
                         DpOffset(200.dp, 320.dp), DpOffset(100.dp, 440.dp),
                         DpOffset(180.dp, 560.dp), DpOffset(100.dp, 680.dp),
                         DpOffset(190.dp, 800.dp), DpOffset(120.dp, 920.dp),
                         DpOffset(160.dp, 1040.dp), DpOffset(130.dp, 1160.dp)
                     )
+*/
+                    val posiciones = niveles.mapIndexed { index, _ ->
+                        val x = if (index % 2 == 0) 120.dp else 200.dp
+                        val y = 100.dp + (index * 120).dp
+                        DpOffset(x, y)
+                    }
 
                     niveles.forEachIndexed { index, nivel ->
                         if (index >= posiciones.size) return@forEachIndexed
@@ -278,7 +284,7 @@ fun HelpOverlay(onDismiss: () -> Unit) {
                             else -> ""
                         },
                         fontSize = sizes.fontSizeMedium,
-                        color = Color.DarkGray,
+                        color = Color.Black,
                         textAlign = TextAlign.Start,
                         modifier = Modifier
                             .padding(vertical = sizes.spacingSmall)

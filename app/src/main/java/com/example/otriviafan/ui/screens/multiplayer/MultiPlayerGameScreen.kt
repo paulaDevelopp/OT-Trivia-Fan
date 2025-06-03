@@ -319,6 +319,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -353,6 +355,7 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
     var youWon by remember { mutableStateOf<Boolean?>(null) }
     val hasAnswered = match.answered[userId] == true
     val currentIndex = match.currentQuestionIndex
+    val showAbandonDialog = remember { mutableStateOf(false) }
 
     LaunchedEffect(match.answered, currentIndex) {
         val allAnswered = match.answered.values.all { it }
@@ -388,9 +391,11 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
                 else -> false
             }
 
-            if (isWinner) repository.addPoints(20)
-            if (isWinner || isDraw) repository.marcarNivelCompletado(userId, match.levelName)
-
+           /* if (isWinner) repository.addPoints(20)*/
+            if (isWinner || isDraw) {
+                repository.marcarNivelCompletado(userId, match.levelName)
+                repository.incrementUserLevel(userId)
+            }
             delay(3000)
             navController.navigate(Screen.MultiPlayerResult.route) {
                 popUpTo(Screen.MultiPlayerResult.route) { inclusive = true }
@@ -409,21 +414,69 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
 
         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)))
 
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Modo multijugador", style = MaterialTheme.typography.headlineMedium, color = Color.White)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "¡QUE GANE EL MEJOR!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.White
+                )
+
+                IconButton(onClick = {
+                    showAbandonDialog.value = true
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.ExitToApp,
+                        contentDescription = "Abandonar partida",
+                        tint = Color.White
+                    )
+                }
+            }
+
+            if (showAbandonDialog.value) {
+                AlertDialog(
+                    onDismissRequest = { showAbandonDialog.value = false },
+                    title = { Text("¿Seguro que quieres abandonar?") },
+                    text = { Text("Si abandonas, la partida se terminará y nadie ganará.") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showAbandonDialog.value = false
+                            scope.launch {
+                                repository.abandonMatch(match.matchId)
+                                delay(300)
+                                navController.navigate(Screen.LevelMap.route) {
+                                    popUpTo(Screen.LevelMap.route) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        }) {
+                            Text("Sí, abandonar", color = Color.Red)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showAbandonDialog.value = false }) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             if (match.status == "finished" && youWon != null) {
-                Text(
-                    if (youWon == true) "\uD83C\uDFC6 ¡Ganaste 20 puntos!" else "\uD83D\uDE14 Has perdido esta vez...",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = Color.White
-                )
+
             } else {
                 val question = match.questions.getOrNull(currentIndex)
                 if (question != null) {
@@ -435,8 +488,7 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(220.dp)
-                                .background(Color.White, shape = RoundedCornerShape(12.dp))
-                        )
+                              )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
 
@@ -484,5 +536,6 @@ fun MultiPlayerGameScreen(navController: NavController, matchViewModel: MatchVie
             Text("Tú: ${if (userId == match.player1Id) match.player1Score else match.player2Score}", color = Color.White)
             Text("Oponente: ${if (userId == match.player1Id) match.player2Score else match.player1Score}", color = Color.White)
         }
+
     }
 }

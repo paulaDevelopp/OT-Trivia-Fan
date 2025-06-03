@@ -100,7 +100,7 @@ fun MultiPlayerJoinScreen(
                         joining = false
                     }
 
-                    if (match?.matchId != null) {
+                   /* if (match?.matchId != null) {
                         Spacer(modifier = Modifier.height(responsive.screenHeight * 0.03f))
                         Text("Código de partida:", fontSize = responsive.fontSizeSmall, color = Color.White)
                         Text(
@@ -110,7 +110,7 @@ fun MultiPlayerJoinScreen(
                             color = Color.Cyan,
                             fontFamily = LuckiestGuyFont
                         )
-                    }
+                    }*/
                 }
             }
         }

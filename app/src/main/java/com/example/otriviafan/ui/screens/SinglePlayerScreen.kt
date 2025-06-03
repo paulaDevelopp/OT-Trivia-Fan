@@ -105,10 +105,13 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
 
         AlertDialog(
             onDismissRequest = {},
-            title = { Text("¡Subiste de Nivel!") },
+            title = {
+                Text("¡Subiste de Nivel!", color = Color.White)
+            },
             text = {
                 Text(
-                    if (partidaPerfecta) "¡Has hecho una partida perfecta!" else "Has completado el nivel. ¡Buen trabajo!"
+                    if (partidaPerfecta) "¡Has hecho una partida perfecta!" else "Has completado el nivel. ¡Buen trabajo!",
+                    color = Color.White
                 )
             },
             confirmButton = {
@@ -119,10 +122,13 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
                         launchSingleTop = true
                     }
                 }) {
-                    Text("Vamos allá")
+                    Text("Vamos allá", color = Color.White)
                 }
-            }
+            },
+            containerColor = Color(0xFF4CAF50)
+
         )
+
     }
 
     if (showPauseDialog) {
@@ -233,7 +239,7 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
                         .fillMaxWidth()
                         .padding(vertical = 7.dp)
                         .wrapContentHeight(),
-                    colors = CardDefaults.cardColors(containerColor =Color(0xFF81D4FA).copy(alpha = 0.3f)),
+                    colors = CardDefaults.cardColors(containerColor =Color(0xFF81D4FA)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                     shape = RoundedCornerShape(20.dp)
                 ) {
@@ -245,7 +251,7 @@ fun SinglePlayerScreen(navController: NavController, levelName: String) {
                     ) {
                         Text(
                             text = question.questionText,
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = sizes.fontSizeLarge,
                             textAlign = TextAlign.Center,
 

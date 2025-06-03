@@ -3,12 +3,14 @@ package com.example.otriviafan.ui.screens
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.otriviafan.R
@@ -48,6 +51,8 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
     val userPoints by userViewModel.points.collectAsState()
     val errorMessage by storeViewModel.error.collectAsState()
     val successMessage by storeViewModel.successMessage.collectAsState()
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedImageUrl by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         userViewModel.reloadWallpapers()
@@ -155,8 +160,17 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                             ) {
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier.size(sizes.screenWidth * 0.3f).clip(RoundedCornerShape(12.dp))
-                                ) {
+                                    modifier = Modifier
+                                        .size(sizes.screenWidth * 0.3f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            if (isUnlocked) {
+                                                selectedImageUrl = item.url
+                                                showDialog = true
+                                            }
+                                        }
+                                )
+                                {
                                     Image(
                                         painter = rememberAsyncImagePainter(item.url),
                                         contentDescription = item.filename,
@@ -247,6 +261,47 @@ fun StoreScreen(navController: NavController, storeViewModel: StoreViewModel, us
                             }
                         }
                     ) { Text(message) }
+                }
+            }
+        }
+    }
+    if (showDialog && selectedImageUrl != null) {
+        Dialog(onDismissRequest = { showDialog = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(42.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White,
+                    tonalElevation = 8.dp,
+                    shadowElevation = 12.dp
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(selectedImageUrl),
+                            contentDescription = "Imagen ampliada",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(0.6f)
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        TextButton(onClick = { showDialog = false }) {
+                            Text(
+                                text = "Cerrar",
+                                fontSize = 16.sp,
+                                color = Color(0xFF4A148C)
+                            )
+                        }
+                    }
                 }
             }
         }
