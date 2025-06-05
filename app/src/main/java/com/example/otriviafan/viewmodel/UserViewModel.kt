@@ -19,8 +19,8 @@ class UserViewModel : ViewModel() {
     private val _highestLevelUnlocked = MutableStateFlow(1)
     val highestLevelUnlocked: StateFlow<Int> = _highestLevelUnlocked
 
-    private val _points = MutableStateFlow(0)
-    val points: StateFlow<Int> = _points
+   private val _points = MutableStateFlow(0)
+   val points: StateFlow<Int> = _points
 
     private val _availableWallpapers = MutableStateFlow<List<WallpaperItem>>(emptyList())
     val availableWallpapers: StateFlow<List<WallpaperItem>> = _availableWallpapers
@@ -52,6 +52,7 @@ class UserViewModel : ViewModel() {
         auth.currentUser?.uid?.let { loadUserDataFor(it) }
     }
 
+    //Carga toda la información del usuario
     fun loadUserDataFor(uid: String) {
         viewModelScope.launch {
             val userLevelName = repository.getUserLevel(uid)
@@ -95,10 +96,12 @@ class UserViewModel : ViewModel() {
             ?.toIntOrNull() ?: Int.MAX_VALUE
     }
 
+    //Recarga toda la información del usuario actual
     fun refreshUserData() {
         auth.currentUser?.uid?.let { loadUserDataFor(it) }
     }
 
+    //Recarga solo la información relacionada con wallpapers
     fun reloadWallpapers() {
         auth.currentUser?.uid?.let { uid ->
             viewModelScope.launch {
@@ -114,7 +117,7 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 repository.buyWallpaper(uid, wallpaper)
-                _points.value = repository.getUserPoints(uid)
+              //  _points.value = repository.getUserPoints(uid)
                 _purchasedWallpapers.value = repository.getUserWallpaperPurchases(uid)
                 onSuccess()
             } catch (e: Exception) {
@@ -132,7 +135,7 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 repository.spendPoints(cantidad)
-                _points.value = repository.getUserPoints(uid)
+               // _points.value = repository.getUserPoints(uid)
                 onComplete()
             } catch (e: Exception) {
                 onError(e)

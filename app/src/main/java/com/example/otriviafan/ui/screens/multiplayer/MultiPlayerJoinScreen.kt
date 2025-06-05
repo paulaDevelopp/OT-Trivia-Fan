@@ -99,18 +99,6 @@ fun MultiPlayerJoinScreen(
                     OTStyledButton(label = "❌ C A N C E L A R", height = responsive.buttonHeight * 0.75f, fontSize = responsive.fontSizeSmall) {
                         joining = false
                     }
-
-                   /* if (match?.matchId != null) {
-                        Spacer(modifier = Modifier.height(responsive.screenHeight * 0.03f))
-                        Text("Código de partida:", fontSize = responsive.fontSizeSmall, color = Color.White)
-                        Text(
-                            match!!.matchId,
-                            fontSize = responsive.fontSizeMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Cyan,
-                            fontFamily = LuckiestGuyFont
-                        )
-                    }*/
                 }
             }
         }

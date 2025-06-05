@@ -10,10 +10,11 @@ import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
 
 class StoreViewModel(private val repository: Repository) : ViewModel() {
+    init {
+        observeAvailableWallpapersRealtime()
+        observeUserPurchasesRealtime()
+    }
 
-  /*  private val _storeItems = MutableStateFlow<List<StoreItem>>(emptyList())
-    val storeItems: StateFlow<List<StoreItem>> = _storeItems
-*/
     private val _userPurchases = MutableStateFlow<List<String>>(emptyList())
     val userPurchases: StateFlow<List<String>> = _userPurchases
 
@@ -25,28 +26,6 @@ class StoreViewModel(private val repository: Repository) : ViewModel() {
     private val _availableWallpapers = MutableStateFlow<List<WallpaperItem>>(emptyList())
     val availableWallpapers: StateFlow<List<WallpaperItem>> = _availableWallpapers
 
-    private var highestLevelUnlocked: Int = 1
-
- /*   fun loadStoreItemsFiltered(userId: String) {
-        viewModelScope.launch {
-            try {
-                highestLevelUnlocked = repository.getUserLevel(userId)
-                val wallpapers = repository.getAvailableWallpapersForUserLevel(highestLevelUnlocked)
-                _storeItems.value = wallpapers.map {
-                    StoreItem(
-                        id = it.filename,
-                        imageUrl = it.url,
-                        price = it.price,
-                        difficulty = it.difficulty,
-                        level = 1 // O ajusta si decides guardar nivel por wallpaper
-                    )
-                }
-            } catch (e: Exception) {
-                _error.value = e.message
-            }
-        }
-    }
-*/
     fun loadUserPurchases(userId: String) {
         viewModelScope.launch {
             try {
@@ -57,27 +36,17 @@ class StoreViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
- /*   fun buyItem(userId: String, item: StoreItem) {
-        viewModelScope.launch {
-            try {
-                repository.buyWallpaper(userId, item.toWallpaperItem())
-                _successMessage.value = "¡Compra exitosa!"
-                loadUserPurchases(userId)
-            } catch (e: Exception) {
-                _error.value = e.message
-            }
-        }
-    }*/
 
-    fun loadAvailableWallpapers() {
+    fun observeAvailableWallpapersRealtime() {
+        repository.observeWallpapers { wallpapers ->
+            _availableWallpapers.value = wallpapers
+        }
+    }
+
+    fun observeUserPurchasesRealtime() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        viewModelScope.launch {
-            try {
-                val wallpapers = repository.getAllWallpapers()
-                _availableWallpapers.value = wallpapers
-            } catch (e: Exception) {
-                _error.value = e.message
-            }
+        repository.observeUserPurchases(userId) { purchases ->
+            _userPurchases.value = purchases
         }
     }
 
@@ -95,10 +64,4 @@ class StoreViewModel(private val repository: Repository) : ViewModel() {
         _successMessage.value = null
     }
 
-   /* private fun StoreItem.toWallpaperItem() = com.example.otriviafan.data.model.WallpaperItem(
-        filename = this.id,
-        url = this.imageUrl,
-        difficulty = this.difficulty,
-        price = this.price
-    )*/
 }

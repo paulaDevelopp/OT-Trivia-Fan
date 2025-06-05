@@ -21,6 +21,7 @@ class MatchViewModel(private val repository: Repository) : ViewModel() {
         _match.value = updated.copy()
     }
 
+    // Crear una nueva partida multijugador con preguntas cargadas desde Firestore
     fun createMatch(userId: String, context: Context, levelName: String) {
         viewModelScope.launch {
             val questions = repository.getQuestionsForMultiplayerLevel(levelName)
@@ -35,7 +36,7 @@ class MatchViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
-
+//Intenta unirse a una partida multijugador existente.
     fun joinMatch(userId: String, context: Context, levelName: String) {
         viewModelScope.launch {
             val matchId = repository.joinOrCreateMatch(userId, context, levelName)
@@ -45,7 +46,7 @@ class MatchViewModel(private val repository: Repository) : ViewModel() {
             }
         }
     }
-
+//Solo actualiza el StateFlow si cambió el índice de pregunta, el mapa de respuestas o el estado de la partida.
     private fun handleMatchUpdate(updated: Match) {
         val current = _match.value
         if (updated.currentQuestionIndex != lastHandledQuestionIndex ||

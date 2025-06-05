@@ -57,32 +57,9 @@ class SinglePlayerViewModel(
     private var huboError = false
     private val usedQuestionIds = mutableSetOf<Int>()
 
-    fun loadQuestions() {
-        viewModelScope.launch {
-            val allQuestions = repository.getQuestionsForLevel(levelName)
-
-            if (allQuestions.isEmpty()) {
-                _questions.value = emptyList()
-                _outOfLives.value = true
-                return@launch
-            }
-
-            val preguntasNoRepetidas = allQuestions.filterNot { usedQuestionIds.contains(it.id) }
-
-            val seleccionadas = preguntasNoRepetidas.shuffled().take(numeroPreguntas)
-            _questions.value = seleccionadas
-            usedQuestionIds.addAll(seleccionadas.map { it.id })
-
-            _currentQuestionIndex.value = 0
-            _score.value = 0
-            _lives.value = 1
-            _outOfLives.value = false
-            _levelCompleted.value = false
-            usadoReintento = false
-            huboError = false
-        }
-    }
-
+    /*Procesa la respuesta del usuario.
+    Suma puntos si es correcta, resta vidas si no.
+    Marca el nivel como completado si se responden todas las preguntas o se acaban las vidas.*/
     fun submitAnswer(isCorrect: Boolean) {
         viewModelScope.launch {
             if (isCorrect) {
@@ -102,6 +79,7 @@ class SinglePlayerViewModel(
         }
     }
 
+    //Si el nivel no es multijugador, lo marca como desbloqueado y guarda el progreso.
     fun finishLevel() {
         viewModelScope.launch {
             val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
@@ -153,15 +131,9 @@ class SinglePlayerViewModel(
             usedQuestionIds.clear()
         }
     }
-    fun goToNextQuestion() {
-        if (_currentQuestionIndex.value + 1 >= _questions.value.size)
-         {
-            _levelCompleted.value = true
-        } else {
-            _currentQuestionIndex.value += 1
-        }
-    }
 
+    /*Intenta gastar 5 puntos del usuario para reintentar si ya perdió.
+    Solo permite un reintento por partida.*/
     suspend fun retryUsingPoints(): Boolean {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return false
         if (usadoReintento) return false
@@ -177,6 +149,7 @@ class SinglePlayerViewModel(
         } else false
     }
 
+    //Verifica si el jugador tiene al menos 5 puntos y no ha usado reintento.
     suspend fun canRetryWithPoints(): Boolean {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return false
         val points = repository.getUserPoints(userId)
@@ -196,4 +169,26 @@ class SinglePlayerViewModel(
     fun setLives(value: Int) {
         _lives.value = value
     }
+
+    /*Escucha los cambios en las preguntas del nivel en tiempo real desde Firestore.
+
+    Filtra preguntas no repetidas, selecciona aleatoriamente 5 y reinicia el estado de la partida.*/
+    fun observeQuestionsRealtime() {
+        repository.observeQuestionsForLevel(levelName) { allQuestions ->
+            val preguntasNoRepetidas = allQuestions.filterNot { usedQuestionIds.contains(it.id) }
+            val seleccionadas = preguntasNoRepetidas.shuffled().take(numeroPreguntas)
+
+            _questions.value = seleccionadas
+            usedQuestionIds.addAll(seleccionadas.map { it.id })
+
+            _currentQuestionIndex.value = 0
+            _score.value = 0
+            _lives.value = 1
+            _outOfLives.value = false
+            _levelCompleted.value = false
+            usadoReintento = false
+            huboError = false
+        }
+    }
+
 }

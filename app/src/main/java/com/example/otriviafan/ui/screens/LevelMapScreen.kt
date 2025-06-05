@@ -147,14 +147,6 @@ fun LevelMapScreen(navController: NavController, userViewModel: UserViewModel) {
                         modifier = Modifier.fillMaxSize()
                     )
 
-                 /*   val posiciones = listOf(
-                        DpOffset(140.dp, 80.dp), DpOffset(90.dp, 200.dp),
-                        DpOffset(200.dp, 320.dp), DpOffset(100.dp, 440.dp),
-                        DpOffset(180.dp, 560.dp), DpOffset(100.dp, 680.dp),
-                        DpOffset(190.dp, 800.dp), DpOffset(120.dp, 920.dp),
-                        DpOffset(160.dp, 1040.dp), DpOffset(130.dp, 1160.dp)
-                    )
-*/
                     val posiciones = niveles.mapIndexed { index, _ ->
                         val x = if (index % 2 == 0) 120.dp else 200.dp
                         val y = 100.dp + (index * 120).dp
@@ -263,6 +255,7 @@ fun HelpOverlay(onDismiss: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(sizes.spacingSmall))
 
+                //deslizar
                 HorizontalPager(state = pagerState) { page ->
                     Text(
                         text = when (page) {

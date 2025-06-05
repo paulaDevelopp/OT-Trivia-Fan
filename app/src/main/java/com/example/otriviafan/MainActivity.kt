@@ -60,7 +60,7 @@ fun AppNavigation(navController: NavHostController) {
             LevelMapScreen(navController = navController, userViewModel = userViewModel)
         }
 
-        // Juego individual con levelName como argumento
+        // Juego individual
         composable(
             "${Screen.SinglePlayer.route}/{levelName}",
             arguments = listOf(navArgument("levelName") { type = NavType.StringType })
@@ -84,7 +84,6 @@ fun AppNavigation(navController: NavHostController) {
             val levelName = backStackEntry.arguments?.getString("levelName") ?: "easy_level1"
             MultiPlayerWaitingScreen(navController, matchViewModel, levelName)
         }
-
 
         composable(
             "multiplayer_join/{levelName}",

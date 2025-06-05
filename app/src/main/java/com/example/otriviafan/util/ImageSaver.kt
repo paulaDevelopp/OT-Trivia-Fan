@@ -1,5 +1,3 @@
-// Ruta: com/example/otriviafan/util/ImageSaver.kt
-
 package com.example.otriviafan.util
 
 import android.content.ContentValues
